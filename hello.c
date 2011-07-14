@@ -1,6 +1,6 @@
 #include <stdio.h>
 int main
 {
-printf("Hello CUDA!!");
-return 0;
+	printf("Hello CUDA!!");
+	return 0;
 }
