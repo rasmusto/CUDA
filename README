@@ -1,14 +1,26 @@
-sadfjreadme
-test
-John Wehland made a change
-IT WORKED
+******** COMMANDS ********
 git status
+    shows modified/new/deleted files since last commit
+
 git diff
-git coimmit
+    shows difference in files between working copy and HEAD revision (last commit)
+
+git commit (-a) [FILES]
+    save changes to specified files (or all files with -a (--all) flag)
+
 git push
+    push latest commits to the remote server (github)
+
 git pull
-HEAD
-MY NEXT CHANGE
-=======
-modified by neeraja
-5268453a70620c852dce4a05efe34a3259079620
+    fetch and merge remote changes with local copy (merges only happen if local changes were committed)
+**************************
+
+********* FILES **********
+.gitignore
+    strings in this file are ignored when doing "git commit -a"
+    i.e.
+        a.out
+        *.o
+        *.hex
+        *.lst
+**************************
