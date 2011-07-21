@@ -1,7 +1,7 @@
 CAP=13
 OPT=-O
 
-all:
+all: j1 j2 j3 j4 j5 j6
 	echo "make j1,j2,j3,j4,j5,j6"
 
 j1:	jhost.o jkernel.o jdriver.o

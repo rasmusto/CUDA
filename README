@@ -24,3 +24,18 @@ git pull
         *.hex
         *.lst
 **************************
+
+
+******* PASSWORDS ********
+1,3,5 th letter of login name
+135_gpu
+
+karavan:
+    krv_gpu <- passwd
+**************************
+
+
+******* MACHINES *********
+meakin.cs.pdx.edu
+wyeast
+**************************
