@@ -19,17 +19,18 @@ static void init( float* a, int n, int m )
     a[(n-1)*m+m-1] = m+n;
 }
 
-int
-main( int argc, char* argv[] )
+int main( int argc, char* argv[] )
 {
-    int n, m;
-    float *a;
-    struct timeval tt1, tt2;
-    int ms;
-    float fms;
+    printf("\nJacobi Driver Initiated\n");			    
+    
+    int n, m;							// The number of rows and columns in the matrix
+    float *a;							// The answer vector
+    struct timeval tt1, tt2;					// time structures for evaluating the time of day
+    int ms;							// miliseconds
+    float fms;							// final miliseconds
 
     if( argc <= 1 ){
-	fprintf( stderr, "%s sizen [sizem]\n", argv[0] );
+	fprintf( stderr, "Error Number of Arguments <=1, Need Col x Row Data\n", argv[0] );
 	return 1;
     }
 
@@ -45,7 +46,21 @@ main( int argc, char* argv[] )
 
     a = (float*)malloc( sizeof(float) * n * m );
 
-    init( a, n, m );
+    init( a, n, m );	
+    
+    //If the number of rows and columns are both under 10 then print to the screen
+    if( n < 10 && m < 10)
+    {
+    	for(int i = 0; i< m; ++i)
+ 	{
+		for(int t=0; t<n; ++t)
+		{
+			printf("%f ", a[i*m + t]);
+		}
+		printf("\n");
+	}
+        
+    }
 
     gettimeofday( &tt1, NULL );
     JacobiHost( a, n, m, .2, .1, .1, .1 );
