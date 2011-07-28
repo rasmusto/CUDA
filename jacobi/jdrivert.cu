@@ -45,10 +45,10 @@ main( int argc, char* argv[] )
 
     a = (float*)malloc( sizeof(float) * n * m );
 
-    init( a, n, m );
+    // init( a, n, m );
 
     gettimeofday( &tt1, NULL );
-    JacobiHost( a, n, m, .2, .1, .1, .1 );
+    // JacobiHost( a, n, m, .2, .1, .1, .1 );
     gettimeofday( &tt2, NULL );
     ms = (tt2.tv_sec - tt1.tv_sec);
     ms = ms * 1000000 + (tt2.tv_usec - tt1.tv_usec);
