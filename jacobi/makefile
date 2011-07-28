@@ -1,8 +1,11 @@
 CAP=13
 OPT=-O
 
-all: j1 j2 j3 j4 j5 j6
-	echo "make j1,j2,j3,j4,j5,j6"
+all: j1 j2 j3 j4 j5 jf
+	echo "make j1,j2,j3,j4,j5,jf"
+
+clean:
+	rm -f *.o j1 j2 j3 j4 j5 jf
 
 j1:	jhost.o jkernel.o jdriver.o
 	nvcc $(OPT) -o $@ $^
@@ -19,7 +22,7 @@ j4:	jhost.o jkernelt2.o jdrivert.o
 j5:	jhost.o jkernelt3.o jdrivert.o
 	nvcc $(OPT) -o $@ $^
 
-j6:	jhost.o jkernelf.o jdrivert.o
+jf:	jhost.o jkernelf.o jdrivert.o
 	nvcc $(OPT) -o $@ $^
 
 
@@ -29,5 +32,5 @@ j6:	jhost.o jkernelf.o jdrivert.o
 %.o: %.cu
 	nvcc $(OPT) -c -Xptxas=-v -arch=sm_$(CAP) $<
 
-clean:
-	rm -f *.o j1 j2 j3 j4 j5 j6
+
+

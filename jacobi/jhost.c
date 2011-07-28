@@ -24,21 +24,24 @@ static float JacobiIter( float* a, float* newa, int n, int m, float w0, float w1
 void JacobiHost( float* a, int n, int m, float w0, float w1, float w2, float tol )
 {
     int i, j;
-    float change;
-    float *ta;
-    float *newa;
-    int iters;
-
+    float change;						//Change in 
+    float *ta;							//Temporary Pointer to a. Used to switch pointer between a and newa	
+    float *newa;						//New Matrix	
+    int iters;							//Number of iterations
+    printf("Host Calculating\n");
     newa = (float*)malloc( sizeof(float) * n * m );
+
     /* copy boundary conditions */
     for( j = 0; j < n; ++j ){
 	newa[j*m+0] = a[j*m+0];
 	newa[j*m+m-1] = a[j*m+m-1];
     }
+    
     for( i = 0; i < m; ++i ){
 	newa[0*m+i] = a[0*m+i];
 	newa[(n-1)*m+i] = a[(n-1)*m+i];
     }
+    
     iters = 0;
     do{
 	++iters;
@@ -48,5 +51,6 @@ void JacobiHost( float* a, int n, int m, float w0, float w1, float w2, float tol
 	a = newa;
 	newa = ta;
     }while( change > tol );
+    
     printf( "JacobiHost converged in %d iterations to residual %f\n", iters, change );
 }
