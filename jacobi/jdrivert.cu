@@ -46,8 +46,10 @@ int main( int argc, char* argv[] )
 
     a = (float*)malloc( sizeof(float) * n * m );
 
+ init( a, n, m );
+/* 
 <<<<<<< HEAD
-    // init( a, n, m );
+    //
 =======
     init( a, n, m );	
     
@@ -65,6 +67,7 @@ int main( int argc, char* argv[] )
         
     }
 >>>>>>> 4ad927989f9a2fcaba65d52b10d2ccb6b885f643
+*/ 
 
     gettimeofday( &tt1, NULL );
     JacobiHost( a, n, m, .2, .1, .1, .1 );
