@@ -43,9 +43,9 @@ main( int argc, char* argv[] )
 
     a = (float*)malloc( sizeof(float) * n * m );
 
-    init( a, n, m );
+    // init( a, n, m );
 
-    JacobiHost( a, n, m, .2, .1, .1, .1 );
+    // JacobiHost( a, n, m, .2, .1, .1, .1 );
 
     init( a, n, m );
 
