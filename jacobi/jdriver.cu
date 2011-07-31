@@ -22,6 +22,7 @@ static void init( float* a, int n, int m )
 int
 main( int argc, char* argv[] )
 {
+    printf("\nStart\n");
     int n, m;
     float *a;
 

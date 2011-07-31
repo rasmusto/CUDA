@@ -4,20 +4,21 @@
 extern "C" __global__ void
 jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, float w1, float w2 )
 {
-    int ii = 0;						//Unknown Variable
-    int nn = 0;						//Unknown Variable 
-    int ti = threadIdx.x;				// The ID of the thread in the x dimension within a block
-    int tj = threadIdx.y;				// The ID of the thread in the y dimension within a block
-    int i = blockIdx.x * blockDim.x + ti + 1;		// The Address of a thread in the x dimension if all blocks  are laid out linearly
-    int j = blockIdx.y * blockDim.y + tj + 1;		// The Address of a thread in the y dimension if all blocks are laid out linearly
-    __shared__ float mychange[18*18];			// Shared memory for the block
-    float mnewa, molda;					// new value for a, old value for a
+    int ii = 0;									// Unknown Variable
+    int nn = 0;									// Unknown Variable 
+    int ti = threadIdx.x;							// The ID of the thread in the x dimension within a block
+    int tj = threadIdx.y;							// The ID of the thread in the y dimension within a block
+    int i = blockIdx.x * blockDim.x + ti + 1;					// The Address of a thread in the x dimension if all blocks  are laid out linearly
+    int j = blockIdx.y * blockDim.y + tj + 1;					// The Address of a thread in the y dimension if all blocks are laid out linearly
+    __shared__ float mychange[18*18];						// Shared memory for the block
+    float mnewa, molda;								// New value for a, Old value for a
 
 
-    mychange[tj*18+ti] = a[(j-1)*m+i-1];
-    if( ti < 2 ) mychange[tj*18+ti+16] = a[(j-1)*m+i+15];
-    if( tj < 2 ) mychange[(tj+16)*18+ti] = a[(j+15)*m+i-1];
-    if( tj < 2 && ti < 2 ) mychange[(tj+16)*18+ti+16] = a[(j+15)*m+i+15];
+   				mychange[(tj*18)   +ti   ]   =  a[(j-1 )*m+i-1 ];					
+
+    if( ti < 2 ) 		mychange[(tj*18)   +ti+16]   =  a[(j-1 )*m+i+15];
+    if( tj < 2 ) 		mychange[(tj+16)*18+ti   ]   =  a[(j+15)*m+i-1 ];
+    if( tj < 2 && ti < 2 ) 	mychange[(tj+16)*18+ti+16]   =  a[(j+15)*m+i+15];
 
     __syncthreads();
 
