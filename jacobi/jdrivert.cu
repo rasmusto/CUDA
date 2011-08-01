@@ -46,9 +46,7 @@ int main( int argc, char* argv[] )
 
     a = (float*)malloc( sizeof(float) * n * m );
 
-<<<<<<< HEAD
     // init( a, n, m );
-=======
     init( a, n, m );	
     
     //If the number of rows and columns are both under 10 then print to the screen
@@ -61,10 +59,8 @@ int main( int argc, char* argv[] )
 			printf("%f ", a[i*m + t]);
 		}
 		printf("\n");
-	}
-        
+	}    
     }
->>>>>>> 4ad927989f9a2fcaba65d52b10d2ccb6b885f643
 
     gettimeofday( &tt1, NULL );
     JacobiHost( a, n, m, .2, .1, .1, .1 );
