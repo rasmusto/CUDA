@@ -81,8 +81,8 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
 
     bx = 16;
     by = 16;
-    gx = (n-2)/bx;
-    gy = (m-2)/by;
+    gx = (n-2)/bx + ((n-2)%bx == 0?0:1);
+    gy = (m-2)/by + ((m-2)%by == 0?0:1);
 
     sumtime = 0.0f;
     memsize = sizeof(float) * n * m;
@@ -139,8 +139,7 @@ static void init( float* a, int n, int m )
     a[(n-1)*m+m-1] = m+n;
 }
 
-int
-main( int argc, char* argv[] )
+int main( int argc, char* argv[] )
 {
     int n, m;
     float *a;
@@ -164,19 +163,9 @@ main( int argc, char* argv[] )
     printf( "Jacobi %d x %d\n", n, m );
 
     a = (float*)malloc( sizeof(float) * n * m );
-
-    //init( a, n, m );
-
-    gettimeofday( &tt1, NULL );
-    //JacobiHost( a, n, m, .2, .1, .1, .1 );
-    gettimeofday( &tt2, NULL );
-    ms = (tt2.tv_sec - tt1.tv_sec);
-    ms = ms * 1000000 + (tt2.tv_usec - tt1.tv_usec);
-    fms = (float)ms / 1000000.0f;
-    //printf( "time(host) = %f seconds\n", fms );
-
+    
     init( a, n, m );
-
+ 
     gettimeofday( &tt1, NULL );
     JacobiGPU( a, n, m, .2, .1, .1, .1 );
     gettimeofday( &tt2, NULL );
