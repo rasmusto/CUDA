@@ -3,6 +3,7 @@
 \usepackage[letterpaper]{geometry}
 \geometry{top=1.0in, bottom=1.0in, left=1.0in, right=1.0in}
 \usepackage{times}
+\usepackage{amssymb,amsmath}
 
 % Title Page
 \title{CUDA Implementation of Jacobi Relaxation}
@@ -14,7 +15,10 @@
 
 \section{Introduction} %background/context, the idea, summary of results
 How will the world be different if we succeed?
-Give away the punchline.
+Give away the punchline\cite{keyname1}.
+There is little argument that parallel programming is the final frontier of supercomputing.
+Processors have reached their thermal density limit, and are soon going to be as small as they can be (barring atomic computers).
+
 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
 
 Implement Jacobi Relaxation in CUDA.  
@@ -24,32 +28,98 @@ Conduct a performance tuning study to get the best possible performance.
 Use available tools such as CUDA profiler, and direct measurement to gather performance data for your application.
 Write a report summarizing your results, including graphs and figures as needed.
 
+\subsection{math} 
+\begin{equation}
+A=\begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix}, 
+\end{equation}
+
+\begin{equation}
+\qquad  \mathbf{x} = \begin{bmatrix} x_{1} \\ x_2 \\ \vdots \\ x_n \end{bmatrix},
+\qquad  \mathbf{b} = \begin{bmatrix} b_{1} \\ b_2 \\ \vdots \\ b_n \end{bmatrix}.
+\end{equation}
+
 \section{Design}
 What could be done.
 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
 
 \section{Implementation}
 What was actually done.
+Our implementation of a parallel Jacobi Relaxation was implemented using CUDA 4.0 on a workstation with ,SPECS,
 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
 
+The device we ran the code on was profiled as follows:
+
+
+\begin{tabular}{ l r }
+&---- General Information for Device 0 ---                  \\
+Name:                      &   Tesla C1060                  \\
+Compute Capability:        &   1.3                          \\
+nClock Rate:               &   1296000                      \\
+Device Copy Overlap:       &   Enabled                      \\
+Kernel Execution Timeout:  &   Disabled                     \\
+
+---- Memory Information for Device 0 ---                    \\
+Total Global Memory:       &   4294770688                   \\
+Total Constant Memory:     &   65536                        \\
+Max mem pitch:             &   2147483647                   \\
+Texture Alignment:         &   256                          \\
+
+--- MP Information for Device 0 ---                         \\
+Multiprocessor Count:      &   30                           \\
+Shared mem per mp:         &   16384                        \\
+Registers per mp :         &   16384                        \\
+Threads in warp:           &   32                           \\
+Max threads per block:     &   512                          \\
+Max thread dimensions:     &   (512 512 64)                 \\
+Max Grid Dimensions:       &   (65535 65535 1)              \\
+
+---- General Information for Device 1 ---                   \\
+Name:                      &   Quadro NVS 295               \\
+Compute Capability:        &   1.1                          \\
+Clock Rate:                &   1300000                      \\
+Device Copy Overlap:       &   Disabled                     \\
+Kernel Execution Timeout : &   Disabled                     \\
+
+---- Memory Information for Device 1 ---                    \\
+Total Global Memory:       &   267714560                    \\
+Total Constant Memory:     &   65536                        \\
+Max mem pitch:             &   2147483647                   \\
+Texture Alignment:         &   256                          \\
+
+--- MP Information for Device 1 ---                         \\
+Multiprocessor Count:      &   1                            \\
+Shared mem per mp:         &   16384                        \\
+Registers per mp :         &   8192                         \\
+Threads in warp:           &   32                           \\
+Max threads per block:     &   512                          \\
+Max thread dimensions:     &   (512 512 64)                 \\
+Max Grid Dimensions:       &   (65535 65535 1)              \\
+
+\end{tabular}
+
 \section{Results} %prove the idea is good
+we found that changing the block dimensions to ----- did -----.
 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
 
 \section{Related Work} %prove the idea is new
 Not required to be fully implemented for this project.
+Who else has done research in this field?
 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
 
 \section{Conclusion} %repeat idea, summarize key results
+Our goal was to implement an efficient, optimized Jacobi Relaxation using CUDA 4.0 and NVidia GPU hardware.
 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
 
 \section{Future Work} %list the things you wanted to do but couldn't finish in time for this paper
+There are many different ways of optimizing parallel code, and our method only touched a single one of those.
+In the future we will have the opportunity to implement ------- in order to more fully explore the platform's potential.
 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
 
 \begin{flushleft}
 \begin{thebibliography}{99}
 \topmargin = -100pt
-    \bibitem{keyname1}``name''
-        citation
+    \bibitem{keyname1}``Relaxation (iterative Method).''
+        Wikipedia, the Free Encyclopedia. Web. 01 Aug. 2011. $<$http://en.wikipedia.org/wiki/Relaxation\_(iterative\_method)$>$.
     \bibitem{keyname2}``name''
         citation
     \bibitem{keyname3}``name''
