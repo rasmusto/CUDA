@@ -1,0 +1,42 @@
+   ---- General Information for Device 0 ---
+Name :                         Tesla C1060
+Compute Capability :           1.3/nClock Rate :                   1296000
+Device Copy Overlap:           Enabled
+Kernel Execution Timeout :     Disabled
+
+  ---- Memory Information for Device 0 ---
+Total Global Memory:           4294770688
+Total Constant Memory:         65536
+Max mem pitch:                 2147483647
+Texture Alignment:             256
+
+    --- MP Information for Device 0 ---
+Multiprocessor Count:          30
+Shared mem per mp:             16384
+Registers per mp :             16384
+Threads in warp:               32
+Max threads per block:         512
+Max thread dimensions:         (512 512 64)
+Max Grid Dimensions:           (65535 65535 1)
+
+   ---- General Information for Device 1 ---
+Name :                         Quadro NVS 295
+Compute Capability :           1.1/nClock Rate :                   1300000
+Device Copy Overlap:           Disabled
+Kernel Execution Timeout :     Disabled
+
+  ---- Memory Information for Device 1 ---
+Total Global Memory:           267714560
+Total Constant Memory:         65536
+Max mem pitch:                 2147483647
+Texture Alignment:             256
+
+    --- MP Information for Device 1 ---
+Multiprocessor Count:          1
+Shared mem per mp:             16384
+Registers per mp :             8192
+Threads in warp:               32
+Max threads per block:         512
+Max thread dimensions:         (512 512 64)
+Max Grid Dimensions:           (65535 65535 1)
+
