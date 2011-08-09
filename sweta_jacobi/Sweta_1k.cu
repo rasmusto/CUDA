@@ -33,6 +33,7 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     int ii = ti+blockDim.x*tj;
     mychange[ii] = fabsf( mnewa - molda );
     __syncthreads();
+    
     int nn = blockDim.x * blockDim.y;
     while( (nn>>=1) > 0 ){
 	if( ii < nn )
@@ -43,9 +44,13 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     if( ii == 0 )
 	lchange[blockIdx.x + gridDim.x*blockIdx.y] = mychange[0];
 	__syncthreads();
-	
-	float mych = 0.0f;
-	
+		
+    
+    int xi = blockIdx.x + gridDim.x*blockIdx.y;
+    
+    if(xi == 0) {
+           
+    float mych = 0.0f;	
     int ni = ti+blockDim.x*tj;
  
     if( ni < sz ) mych = lchange[ni];
@@ -66,6 +71,8 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     }
     if( ni == 0 )
 	lchange[0] = mychange[0];
+	
+ }
 
 }
 
@@ -138,16 +145,6 @@ static void init( float* a, int n, int m )
 	a[(n-1)*m+i] = i;
     }
     a[(n-1)*m+m-1] = m+n;
-}
-
-static void init1( float* a, int n, int m )
-{
-    int i, j;
-    memset( a, 0, sizeof(float) * n * m );
-    /* boundary conditions */
-    for (i=0; i<m; i++)
-     for (j=0; j<n; j++)
-         a[i*n+j] = i;
 }
 
 int main( int argc, char* argv[] )
