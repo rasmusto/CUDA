@@ -7,25 +7,30 @@
 
 % Title Page
 \title{CUDA Implementation of Jacobi Relaxation}
-\author{Torben Rasmussen, mawolfe, wehland, ssharma, neeraja}
+\author{Neeraja Budamagunta, Torben Rasmussen, Sweta Sharma, John Wehland, Matthew Wolfe}
 \date{7/20/2011}
 
 \begin{document}
 \maketitle
 \section{Abstract}
 \section{Introduction} %background/context, the idea, summary of results
-Over the past few years GPU’s which originally were used for high graphics applications, have now become GP-GPU’s (general purpose GPU’s).
-Since almost 6 years now researchers have looked into the potential of GPU’s to do parallel mathematical applications (GPU computing), and hence enter CUDA.
-CUDA is Nvidia’s parallel computing architecture, which gives the programmer an interface to the under lying GPU’s.
+The graphics processing unit (GPU) is an application-specific device aimed at rapidly building images for viewing on a display.
+Over the past decade, GPUs have become more and more general purpose, and can now be called general purpose GPUs (GP-GPUs).
+Software frameworks such as CUDA and OpenCL have allowed researchers to tap into the parallelism that exists in these devices.
+These frameworks allow the creation of parallel mathematical applications that can be deployed on low-cost, readily available hardware.
+CUDA, or Compute Unified Device Architecture, is Nvidia's parallel computing architecture.
+This architecture gives a programmer access to the underlying hardware through a few layers of abstraction, allowing for relatively high-level programming.
 A GPU can offer a very high computational rate if the algorithm is well-suited for the device.
-One of those applications is matrix computation.
-Matrix applications like Jacobi relaxation are interesting to work on a parallel computing architecture.
-Hence is a well suited application to work with on GP-GPU’s.
+One such application is matrix computation.
+Matrix applications like the Jacobi relaxation work well in parallel.
+As such, it is well suited to work with on GP-GPU’s.
+
 The rest of our report is organized in the following way.
 The next section talks about our project idea, design and analysis of solution to our problem.
 Section 3 shows the actual implementations followed by the results achieved.
 In section 4 we discuss work related to ours and finally conclude in section 5.
-We had limited goals due to shortage of time and hence we discuss future work in section 6.
+We had limited goals due to shortage of time and resources, so we discuss future work in section 6.
+
     \subsection{Background} %CUDA, math
 
 \section{Our Project}
