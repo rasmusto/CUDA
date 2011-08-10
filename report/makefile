@@ -1,8 +1,12 @@
 DOCNAME=report
-OUTLINE=notes
-default:
-	pdflatex ${DOCNAME}.tex
+OUTLINE=skeleton
+
+skeleton:
 	pdflatex ${OUTLINE}.tex
+
+report:
+	pdflatex ${DOCNAME}.tex
+
 clean:
 	rm -rf ${DOCNAME}.aux ${DOCNAME}.pdf ${DOCNAME}.log
 	rm -rf ${OUTLINE}.aux ${OUTLINE}.pdf ${OUTLINE}.log

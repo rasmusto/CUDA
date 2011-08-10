@@ -38,7 +38,7 @@ Till now we have talked about the algorithm and design of our problem. In this s
 actual implementation and the results we got using these optimizations. We actually worked on two
 levels of optimizations on [reference], one of those is the one kernel optimizations and the other one is
 maximizing the throughput according to the array size.
-    \subsection{implementation 1}
+    \subsection{Implementation 1: One Kernel Optimization}
     Our first optimization is to implement Jacobi relaxation in CUDA with one kernel. In [reference]
     Michael has implemented Jacobi relaxation in CUDA using two kernel calls per iteration. Instead as an
     optimization we use a single kernel call per iteration reducing the over head to initiate an extra kernel
@@ -56,17 +56,21 @@ maximizing the throughput according to the array size.
     one kernel (our implementation), performance with two kernels (as in [reference]) and the performance
     improvement of one kernel, over two kernel implementation.
 
-    \begin{tabular}{ l l l l l l l l }
-    Array Size  & 1kernel total time   & 2kernel  total time  & 1kernel calculation time    & 2kernel  calculation time   & Performance improvement on total time   & Performance improvement on calculation time & Percentage improvement in performance on calculation time of 1kernel over 2 kernel \\
-    130x130 & 0.108135    & 0.106293    & 0.009158    & 0.010240    & 0.98296574  & 1.11814807  & 10.5  \\
-    146x146 & 0.104811    & 0.106242    & 0.010526    & 0.011699    & 1.01365315  & 1.11143834  & 10    \\
-    162x162 & 0.131627    & 0.115655    & 0.014078    & 0.015089    & 0.87865711  & 1.07181418  & 6.7   \\
-    178x178 & 0.115519    & 0.118052    & 0.018908    & 0.020070    & 1.02192713  & 1.06145547  & 5.7   \\
-    194x194 & 0.119967    & 0.119893    & 0.021031    & 0.022331    & 0.99938316  & 1.06181351  & 5.8   \\
-    210x210 & 0.125773    & 0.128649    & 0.024906    & 0.026340    & 1.02286659  & 1.05757649  & 5.4   \\
-    226x226 & 0.128909    & 0.130154    & 0.029529    & 0.030782    & 1.00965798  & 1.04243286  & 4     \\
-    242x242 & 0.137315    & 0.150276    & 0.034656    & 0.037037    & 1.09438881  & 1.06870383  & 6.4   \\
-    \end{tabular}
+    \begin{center}
+        \begin{tabular}{ | p{1.3cm} | p{1.5cm} | p{1.5cm} | p{1.6cm} | p{1.6cm} | p{2cm} | p{1.9cm} | p{2cm} | }
+            \hline
+            Array Size  & One kernel total time (s) & Two kernel total time (s) & One kernel calc. time (s) & Two kernel calc. time (s) & Improvement on total time (s) & Improvement on calc. time (s) & Improvement in calc. time: 1 kernel over 2 kernel (\%) \\ \hline
+            130x130 & 0.108135    & 0.106293    & 0.009158    & 0.010240    & 0.98296574  & 1.11814807  & 10.5  \\
+            146x146 & 0.104811    & 0.106242    & 0.010526    & 0.011699    & 1.01365315  & 1.11143834  & 10    \\
+            162x162 & 0.131627    & 0.115655    & 0.014078    & 0.015089    & 0.87865711  & 1.07181418  & 6.7   \\
+            178x178 & 0.115519    & 0.118052    & 0.018908    & 0.020070    & 1.02192713  & 1.06145547  & 5.7   \\
+            194x194 & 0.119967    & 0.119893    & 0.021031    & 0.022331    & 0.99938316  & 1.06181351  & 5.8   \\
+            210x210 & 0.125773    & 0.128649    & 0.024906    & 0.026340    & 1.02286659  & 1.05757649  & 5.4   \\
+            226x226 & 0.128909    & 0.130154    & 0.029529    & 0.030782    & 1.00965798  & 1.04243286  & 4     \\
+            242x242 & 0.137315    & 0.150276    & 0.034656    & 0.037037    & 1.09438881  & 1.06870383  & 6.4   \\
+            \hline
+        \end{tabular}
+    \end{center}
 
     \subsection{implementation 2}
     \subsection{summary} % of results with graphs/tables/etc.
