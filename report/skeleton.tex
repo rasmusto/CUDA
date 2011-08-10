@@ -14,6 +14,18 @@
 \maketitle
 \section{Abstract}
 \section{Introduction} %background/context, the idea, summary of results
+Over the past few years GPU’s which originally were used for high graphics applications, have now become GP-GPU’s (general purpose GPU’s).
+Since almost 6 years now researchers have looked into the potential of GPU’s to do parallel mathematical applications (GPU computing), and hence enter CUDA.
+CUDA is Nvidia’s parallel computing architecture, which gives the programmer an interface to the under lying GPU’s.
+A GPU can offer a very high computational rate if the algorithm is well-suited for the device.
+One of those applications is matrix computation.
+Matrix applications like Jacobi relaxation are interesting to work on a parallel computing architecture.
+Hence is a well suited application to work with on GP-GPU’s.
+The rest of our report is organized in the following way.
+The next section talks about our project idea, design and analysis of solution to our problem.
+Section 3 shows the actual implementations followed by the results achieved.
+In section 4 we discuss work related to ours and finally conclude in section 5.
+We had limited goals due to shortage of time and hence we discuss future work in section 6.
     \subsection{Background} %CUDA, math
 
 \section{Our Project}
@@ -22,9 +34,41 @@
     \subsection{Design} %what we did, how did we improve it (performance tuning).  input matrix size, kernel code (including block size), etc.
 
 \section{Results} %prove the idea is good
+Till now we have talked about the algorithm and design of our problem. In this section we show the
+actual implementation and the results we got using these optimizations. We actually worked on two
+levels of optimizations on [reference], one of those is the one kernel optimizations and the other one is
+maximizing the throughput according to the array size.
     \subsection{implementation 1}
+    Our first optimization is to implement Jacobi relaxation in CUDA with one kernel. In [reference]
+    Michael has implemented Jacobi relaxation in CUDA using two kernel calls per iteration. Instead as an
+    optimization we use a single kernel call per iteration reducing the over head to initiate an extra kernel
+    each time. The reason for using two kernels initially was to reduce the change values across the blocks
+    to one single value. These change values were reduced from one change value per thread to a change
+    value per block, in the first kernel 'jacobikernel'. In the second kernel with fewer numbers of threads
+    and one single block those values are reduced to one single change value. In our implementation we
+    used the existing threads to do the additional work of further reducing the per block change values to
+    a single value. With this optimization we were able to reduce the calculation time to 10%. However we
+    could not reduce it much further because though here we are reducing the over head of initialization of
+    a new kernel and creating new threads, but in our implementation there are other threads in the end
+    which sit idle and do not have much work to do. However this is a possible way of optimization which
+    did give us positive results. In the table below we have shown a few array sizes, their performance with
+
+    one kernel (our implementation), performance with two kernels (as in [reference]) and the performance
+    improvement of one kernel, over two kernel implementation.
+
+    \begin{tabular}{ l l l l l l l l }
+    Array Size  & 1kernel total time   & 2kernel  total time  & 1kernel calculation time    & 2kernel  calculation time   & Performance improvement on total time   & Performance improvement on calculation time & Percentage improvement in performance on calculation time of 1kernel over 2 kernel \\
+    130x130 & 0.108135    & 0.106293    & 0.009158    & 0.010240    & 0.98296574  & 1.11814807  & 10.5  \\
+    146x146 & 0.104811    & 0.106242    & 0.010526    & 0.011699    & 1.01365315  & 1.11143834  & 10    \\
+    162x162 & 0.131627    & 0.115655    & 0.014078    & 0.015089    & 0.87865711  & 1.07181418  & 6.7   \\
+    178x178 & 0.115519    & 0.118052    & 0.018908    & 0.020070    & 1.02192713  & 1.06145547  & 5.7   \\
+    194x194 & 0.119967    & 0.119893    & 0.021031    & 0.022331    & 0.99938316  & 1.06181351  & 5.8   \\
+    210x210 & 0.125773    & 0.128649    & 0.024906    & 0.026340    & 1.02286659  & 1.05757649  & 5.4   \\
+    226x226 & 0.128909    & 0.130154    & 0.029529    & 0.030782    & 1.00965798  & 1.04243286  & 4     \\
+    242x242 & 0.137315    & 0.150276    & 0.034656    & 0.037037    & 1.09438881  & 1.06870383  & 6.4   \\
+    \end{tabular}
+
     \subsection{implementation 2}
-    \subsection{implementation 3}
     \subsection{summary} % of results with graphs/tables/etc.
 
 \section{Related Work} %prove the idea is new? It really isn't, but it's our take on existing software.  This section may be small.
