@@ -4,6 +4,8 @@
 \geometry{top=1.0in, bottom=1.0in, left=1.0in, right=1.0in}
 \usepackage{times}
 \usepackage{amssymb,amsmath}
+\usepackage{verbatim}
+\usepackage{graphicx}
 
 % Title Page
 \title{CUDA Implementation of Jacobi Relaxation}
@@ -39,27 +41,21 @@ We had limited goals due to shortage of time and resources, so we discuss future
     \subsection{Design} %what we did, how did we improve it (performance tuning).  input matrix size, kernel code (including block size), etc.
 
 \section{Results} %prove the idea is good
-Till now we have talked about the algorithm and design of our problem. In this section we show the
-actual implementation and the results we got using these optimizations. We actually worked on two
-levels of optimizations on [reference], one of those is the one kernel optimizations and the other one is
-maximizing the throughput according to the array size.
+Till now we have talked about the algorithm and design of our problem.
+In this section we show the actual implementation and the results we got using these optimizations.
+We actually worked on two levels of optimizations on [reference], one of those is the one kernel optimizations and the other one is maximizing the throughput according to the array size.
     \subsection{Implementation 1: One Kernel Optimization}
-    Our first optimization is to implement Jacobi relaxation in CUDA with one kernel. In [reference]
-    Michael has implemented Jacobi relaxation in CUDA using two kernel calls per iteration. Instead as an
-    optimization we use a single kernel call per iteration reducing the over head to initiate an extra kernel
-    each time. The reason for using two kernels initially was to reduce the change values across the blocks
-    to one single value. These change values were reduced from one change value per thread to a change
-    value per block, in the first kernel 'jacobikernel'. In the second kernel with fewer numbers of threads
-    and one single block those values are reduced to one single change value. In our implementation we
-    used the existing threads to do the additional work of further reducing the per block change values to
-    a single value. With this optimization we were able to reduce the calculation time to 10%. However we
-    could not reduce it much further because though here we are reducing the over head of initialization of
-    a new kernel and creating new threads, but in our implementation there are other threads in the end
-    which sit idle and do not have much work to do. However this is a possible way of optimization which
-    did give us positive results. In the table below we have shown a few array sizes, their performance with
-
-    one kernel (our implementation), performance with two kernels (as in [reference]) and the performance
-    improvement of one kernel, over two kernel implementation.
+    Our first optimization is to implement Jacobi relaxation in CUDA with one kernel.
+    In [reference] Michael has implemented Jacobi relaxation in CUDA using two kernel calls per iteration.
+    Instead as an optimization we use a single kernel call per iteration reducing the over head to initiate an extra kernel each time.
+    The reason for using two kernels initially was to reduce the change values across the blocks to one single value.
+    These change values were reduced from one change value per thread to a change value per block, in the first kernel 'jacobikernel'.
+    In the second kernel with fewer numbers of threads and one single block those values are reduced to one single change value.
+    In our implementation we used the existing threads to do the additional work of further reducing the per block change values to a single value.
+    With this optimization we were able to reduce the calculation time to 10\%.
+    However we could not reduce it much further because though here we are reducing the over head of initialization of a new kernel and creating new threads, but in our implementation there are other threads in the end which sit idle and do not have much work to do.
+    However this is a possible way of optimization which did give us positive results.
+    In the table below we have shown a few array sizes, their performance with one kernel (our implementation), performance with two kernels (as in [reference]) and the performance improvement of one kernel, over two kernel implementation.
 
     \begin{center}
         \begin{tabular}{ | p{1.3cm} | p{1.5cm} | p{1.5cm} | p{1.6cm} | p{1.6cm} | p{2cm} | p{1.9cm} | p{2cm} | }
@@ -76,8 +72,97 @@ maximizing the throughput according to the array size.
             \hline
         \end{tabular}
     \end{center}
+    \clearpage
 
-    \subsection{implementation 2}
+    \subsection{Performance Tuning}
+    The performance of the GPU is traditionally obtained at the algorithmic level.
+    We have measured and simulated the performance by experimenting with various sizes of blocks and matrices.
+    Ideally, a larger matrix -size would increase the performance of the GPU because,  it would increase  the  number of computations.
+    We have taken the following factors as benchmarks to tune the performance of the Jacobi relaxation in CUDA.
+\begin{itemize}
+    \item Time taken
+    \item Throughput
+    \item GFLOPS
+    \item Occupancy
+    \item Speed Up
+\end{itemize}
+    Time taken by the GPU  : We have calculated the time taken by the GPU in 2 ways
+    \begin{enumerate}
+        \item Direct measurement
+        \item Measurement using a profiler
+    \end{enumerate}
+
+    {\bf Direct Measurement:} We have measured the time elapsed through direct measurement using the   following  2 ways
+    (i)     Gettimeofday: The gettimeofday() function shall obtain the current time, expressed as seconds and microseconds since the Epoch, and store it in the timeval structure pointed to by tv.
+            Here is the sample code that we used:
+    \begin{tiny}
+    \begin{verbatim}
+    gettimeofday( &tt1, NULL );
+    JacobiGPU( a, n, m, .2, .1, .1, .1 );
+    gettimeofday( &tt2, NULL );
+    ms = (tt2.tv_sec - tt1.tv_sec);
+    ms = ms * 1000000 + (tt2.tv_usec - tt1.tv_usec);
+    fms = (float)ms / 1000000.0f;
+    printf( "time(gpu ) = %f seconds\n", fms );
+    \end{verbatim}
+    \end{tiny}
+
+    (ii)    Cuda Events: The CUDA event API provides calls that create and destroy events, record events (via timestamp), and convert timestamp differences into a floating-point value in milliseconds. We have used the cudaEventRecord and the cudaEventElapsedTime to  measure the time taken by the GPU. The cudaEventRecord records an event and the cudaEventElapsedTime  computes the elapsed time between two events (in milliseconds with a resolution of around 0.5 microseconds). Here is the sample code that we used before and after the kernel call. 
+    \begin{tiny}
+    \begin{verbatim}
+    cudaEventRecord( e2 );
+    cudaMemcpy( &change, lchange, sizeof(float), \ 
+                cudaMemcpyDeviceToHost );
+    cudaEventElapsedTime( &msec, e1, e2 );
+    sumtime += msec;
+    \end{verbatim}
+    \end{tiny}
+
+
+    Here is a table of  inputs and the time taken by the GPU.
+    Matrix Size Block Size  Time Taken
+
+
+    Time Taken by the GPU
+    Figure (i) Matrix Size and Time Taken for varying block sizes of 16x16, 10x10 and 20x20
+    -----Notes about the results
+
+    Throughput:  Throughput, here is typically the amount of work the GPU does in a given amount of time. We have used the computeprof visual profiler to measure the memory and instructional throughput. The memory throughput reported in the summary table of computeprof ,  measures  the throughput using a subset of the GPU’s multiprocessors and then extrapolates that number to the entire GPU, thus reporting an estimate of the data throughput. Also, the throughput reported by the profiler includes the transfer of data not used by the kernel.  Here is the table of input and the throughput gained.
+
+
+
+
+    Matrix Size Block Size     Kernel   GPU Time    Global Mem Overall Throughput   Instruction Throughput
+
+
+    ---- Notes on results
+
+    \includegraphics[width=6cm]{./CUDA_instruction_throughput.PNG}
+
+    ----- Notes on results
+    GFLOPS:   FLOPS are typically the measure of a computer’s performance.
+    This is similar to the number of instructions per second, but we consider only the floating point operations.
+    We have benchmarked the GFLOPS based on the maximum performance that our CUDA device could perform.
+    The Tesla C 1060 can perform ?????.
+    We estimated the effective FLOPS at the algorithmic level and multiplied it by the number of iterations, Block Size, Grid Size and arrived at the total number of FLOPS and hence calculated the GFLOPS.
+    We then compared the gained GFLOPS with the benchmark.
+    Here are the tabulated results.
+
+    -------table for GFLOPS
+
+    Occupancy:  Executing other warps when one warp is paused is the only way to hide latencies and keep the hardware busy.
+    Occupancy is related to the number of active warps on a multiprocessor and is therefore important in determining how effectively the hardware is kept busy.
+    We used the CUDA occupancy calculator and the Compute Profiler  to calculate the multiprocessor occupancy of a GPU by a given CUDA kernel.
+    Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads().
+    The occupancy is determined by the amount of shared memory and registers used by each thread block.
+
+
+    --- Notes on results
+
+
+    Speed Up:
+
+
     \subsection{summary} % of results with graphs/tables/etc.
 
 \section{Related Work} %prove the idea is new? It really isn't, but it's our take on existing software.  This section may be small.
