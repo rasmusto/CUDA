@@ -124,6 +124,10 @@ We actually worked on two levels of optimizations on [reference], one of those i
 
 
     Time Taken by the GPU
+
+    \begin{center}
+    \includegraphics[width=8cm]{bar.pdf}
+    \end{center}
     Figure (i) Matrix Size and Time Taken for varying block sizes of 16x16, 10x10 and 20x20
     -----Notes about the results
 
@@ -134,10 +138,15 @@ We actually worked on two levels of optimizations on [reference], one of those i
 
     Matrix Size Block Size     Kernel   GPU Time    Global Mem Overall Throughput   Instruction Throughput
 
+    \begin{center}
+    \includegraphics[width=8cm]{bar.pdf}
+    \end{center}
 
     ---- Notes on results
 
-    \includegraphics[width=6cm]{./CUDA_instruction_throughput.PNG}
+    \begin{center}
+    \includegraphics[width=8cm]{bar.pdf}
+    \end{center}
 
     ----- Notes on results
     GFLOPS:   FLOPS are typically the measure of a computer’s performance.
@@ -156,9 +165,15 @@ We actually worked on two levels of optimizations on [reference], one of those i
     Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads().
     The occupancy is determined by the amount of shared memory and registers used by each thread block.
 
+    \begin{center}
+    \includegraphics[width=8cm]{scatter.pdf}
+    \end{center}
 
     --- Notes on results
 
+    \begin{center}
+    \includegraphics[width=8cm]{scatter.pdf}
+    \end{center}
 
     Speed Up:
 
