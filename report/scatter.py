@@ -14,6 +14,7 @@ import matplotlib.cbook as cbook
 datafile = cbook.get_sample_data('goog.npy')
 r = np.load(datafile).view(np.recarray)
 r = r[-250:] # get the most recent 250 trading days
+print r
 
 delta1 = np.diff(r.adj_close)/r.adj_close[:-1]
 
@@ -23,15 +24,27 @@ close = 0.003*r.close[:-2]/0.003*r.open[:-2]
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.scatter(delta1[:-1], delta1[1:], c=close, s=volume, alpha=0.75)
+
+xx = [1, 2, 3, 4, 5, 6]
+#xx.append(xx)
+
+yy = [2, 4, 10, 2, 5, 1]
+#yy.append(yy)
+
+#ax.scatter(delta1[:-1], delta1[1:], c=close, s=volume, alpha=0.75)
+ax.scatter(xx, yy, marker='o', c='g', alpha=0.75)
 
 #ticks = arange(-0.06, 0.061, 0.02)
 #xticks(ticks)
 #yticks(ticks)
 
-ax.set_xlabel(r'$\Delta_i$', fontsize=20)
-ax.set_ylabel(r'$\Delta_{i+1}$', fontsize=20)
-ax.set_title('Volume and percent change')
+#ax.set_xlabel(r'$\Delta_i$', fontsize=20)
+#ax.set_ylabel(r'$\Delta_{i+1}$', fontsize=20)
+
+ax.set_xlabel('xlabel', fontsize=20)
+ax.set_ylabel('ylabel', fontsize=20)
+
+ax.set_title('Sample Scatterplot')
 ax.grid(True)
 
 plt.show()
