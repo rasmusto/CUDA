@@ -12,6 +12,7 @@ N=1026
 #M=4098
 #N=4098
 
+# -------------------------------------------------------- #
 all: seq original5 original6 1k_jacobi5 1k_jacobi6
 
 seq: seq_jacobi.c
@@ -28,17 +29,38 @@ original6: original_jacobi6.cu
 
 1k_jacobi6: 1k_jacobi6.cu
 	nvcc ${OPT} 1k_jacobi6.cu -o 1k_jacobi6.o
+# -------------------------------------------------------- #
 
+
+# -------------------------------------------------------- #
+orig_jacobi6Mod: orig_jacobi6Mod.cu
+	nvcc ${OPT} orig_jacobi6Mod.cu -o orig_jacobi6Mod.o
+
+1k_jacobi6Mod: 1k_jacobi6Mod.cu
+	nvcc ${OPT} 1k_jacobi6Mod.cu -o 1k_jacobi6Mod.o
+# -------------------------------------------------------- #
+
+
+# -------------------------------------------------------- #
 %.o: %.cu
 	nvcc $(OPT) -c -Xptxas=-v -arch=sm_$(CAP) $<
+# -------------------------------------------------------- #
 
-run: seq_jacobi.o original_jacobi5.o original_jacobi6.o 1k_jacobi5.o 1k_jacobi6.o
+
+# -------------------------------------------------------- #
+run1: original_jacobi5.o original_jacobi6.o 1k_jacobi5.o 1k_jacobi6.o
 	mkdir -p logs
-	#./seq_jacobi.o       ${M} ${N} 2>&1 | tee logs/seq_jacobi_${M}_${N}.log
 	./original_jacobi5.o ${M} ${N} 2>&1 | tee logs/original_jacobi5_${M}_${N}.log
 	./original_jacobi6.o ${M} ${N} 2>&1 | tee logs/original_jacobi6_${M}_${N}.log
 	./1k_jacobi5.o       ${M} ${N} 2>&1 | tee logs/1k_jacobi5_${M}_${N}.log
 	./1k_jacobi6.o       ${M} ${N} 2>&1 | tee logs/1k_jacobi6_${M}_${N}.log
+# -------------------------------------------------------- #
+
+
+# -------------------------------------------------------- #
+run2: seq_jacobi.o
+	./seq_jacobi.o       ${M} ${N} 2>&1 | tee logs/seq_jacobi_${M}_${N}.log
+# -------------------------------------------------------- #
 
 clean:
 	rm -f *.o
