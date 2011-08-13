@@ -11,27 +11,13 @@ import matplotlib.cbook as cbook
 # open, close, volume, adj_close from the mpl-data/example directory.
 # The record array stores python datetime.date as an object array in
 # the date column
-datafile = cbook.get_sample_data('goog.npy')
-r = np.load(datafile).view(np.recarray)
-r = r[-250:] # get the most recent 250 trading days
-print r
-
-delta1 = np.diff(r.adj_close)/r.adj_close[:-1]
-
-# size in points ^2
-volume = (15*r.volume[:-2]/r.volume[0])**2
-close = 0.003*r.close[:-2]/0.003*r.open[:-2]
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-xx = [1, 2, 3, 4, 5, 6]
-#xx.append(xx)
+xx  =  [1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24]
+yy  =  [1,  2,  3,  4,  5,  6,  1,  2,  3,  4,   5,   6,   1,   2,   3,   4,   5,   6,   1,   2,   3,   4,   5,   6]
 
-yy = [2, 4, 10, 2, 5, 1]
-#yy.append(yy)
-
-#ax.scatter(delta1[:-1], delta1[1:], c=close, s=volume, alpha=0.75)
 ax.scatter(xx, yy, marker='o', c='g', alpha=0.75)
 
 #ticks = arange(-0.06, 0.061, 0.02)
