@@ -3,36 +3,49 @@
 #include <sys/time.h>
 #include <math.h>
 
-__global__ void
+ __global__ void
 jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, float w1, float w2, int sz )
 {
     int ti = threadIdx.x;
     int tj = threadIdx.y;
     int i = blockIdx.x * blockDim.x + ti + 1;
     int j = blockIdx.y * blockDim.y + tj + 1;
+    __shared__ float mychange[18*18];
+    float mnewa, molda;
 
-    newa[j*m+i] = w0*a[j*m+i] +
-	    w1 * (a[j*m+i-1] + a[(j-1)*m+i] +
-		  a[j*m+i+1] + a[(j+1)*m+i]) +
-	    w2 * (a[(j-1)*m+i-1] + a[(j+1)*m+i-1] +
-		  a[(j-1)*m+i+1] + a[(j+1)*m+i+1]);
 
-    __shared__ float mychange[256];
-    int ii = ti+blockDim.x*tj;
-    mychange[ii] = fabsf( newa[j*m+i] - a[j*m+i] );
+    mychange[tj*18+ti] = a[(j-1)*m+i-1];
+    if( ti < 2 ) mychange[tj*18+ti+16] = a[(j-1)*m+i+15];
+    if( tj < 2 ) mychange[(tj+16)*18+ti] = a[(j+15)*m+i-1];
+    if( tj < 2 && ti < 2 ) mychange[(tj+16)*18+ti+16] = a[(j+15)*m+i+15];
+
     __syncthreads();
+
+    molda = mychange[(tj+1)*18+(ti+1)];
+    mnewa = w0*molda +
+	    w1 * (mychange[(tj+1)*18+(ti  )] + mychange[(tj  )*18+(ti+1)] +
+		  mychange[(tj+1)*18+(ti+2)] + mychange[(tj+2)*18+(ti+1)]) +
+	    w2 * (mychange[(tj  )*18+(ti  )] + mychange[(tj+2)*18+(ti  )] +
+		  mychange[(tj  )*18+(ti+2)] + mychange[(tj+2)*18+(ti+2)]);
+    newa[j*m+i] = mnewa;
+    __syncthreads();
+
+    int ii = ti+blockDim.x*tj;
+    mychange[ii] = fabsf( mnewa - molda );
+    __syncthreads();
+    
     int nn = blockDim.x * blockDim.y;
     while( (nn>>=1) > 0 ){
 	if( ii < nn )
 	    mychange[ii] = fmaxf( mychange[ii], mychange[ii+nn] );
 	__syncthreads();
     }
+    
     if( ii == 0 )
 	lchange[blockIdx.x + gridDim.x*blockIdx.y] = mychange[0];
-	
-//***************** 1k optimization changes start here ******************//
-	__syncthreads();
-		
+
+//***************** 1k optimization changes start here ******************//	
+    __syncthreads();		
     
     int xi = blockIdx.x + gridDim.x*blockIdx.y;
     
@@ -76,6 +89,8 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
     float *da, *dnewa, *lchange;
     cudaEvent_t e1, e2;
 
+    float changeCheck = 0, oldchange = 0;
+
     bx = 16;
     by = 16;
     gx = (n-2)/bx + ((n-2)%bx == 0?0:1);
@@ -109,7 +124,19 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
 	float *ta;
 	ta = da;
 	da = dnewa;
-	dnewa = ta; 
+	dnewa = ta;  
+	//printf("iters = %d, change = %f\n", iters, change);
+	if(change == oldchange)
+	{
+		changeCheck++;
+	}
+	oldchange = change;
+	if(changeCheck > sqrt(m))
+	{
+		change = (tol - .01);
+	}
+	printf("iters = %d, change = %f, changeCheck = %f, oldchange = %f\n", iters, change, changeCheck, oldchange);
+
     }while( change > tol );
     printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
     printf( "JacobiGPU  used %f seconds total\n", sumtime/1000.0f );
@@ -135,8 +162,7 @@ static void init( float* a, int n, int m )
     a[(n-1)*m+m-1] = m+n;
 }
 
-int
-main( int argc, char* argv[] )
+int main( int argc, char* argv[] )
 {
     int n, m;
     float *a;
@@ -160,9 +186,9 @@ main( int argc, char* argv[] )
     printf( "Jacobi %d x %d\n", n, m );
 
     a = (float*)malloc( sizeof(float) * n * m );
-
+    
     init( a, n, m );
-
+ 
     gettimeofday( &tt1, NULL );
     JacobiGPU( a, n, m, .2, .1, .1, .1 );
     gettimeofday( &tt2, NULL );

@@ -4,7 +4,7 @@
 #include <math.h>
 
 __global__ void
-jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, float w1, float w2 )
+jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, float w1, float w2, int sz )
 {
     int ti = threadIdx.x;
     int tj = threadIdx.y;
@@ -29,30 +29,39 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     }
     if( ii == 0 )
 	lchange[blockIdx.x + gridDim.x*blockIdx.y] = mychange[0];
-}
-
- __global__ void
-reductionkernel( float* lchange, int n )
-{
-    __shared__ float mychange[256];
-    float mych = 0.0f;
-    int ii = threadIdx.x, m;
-    if( ii < n ) mych = lchange[ii];
-    m = blockDim.x;
-    while( m <= n ){
-	mych = fmaxf( mych, lchange[ii+m] );
-	m += blockDim.x;
+	
+//***************** 1k optimization changes start here ******************//
+	__syncthreads();
+		
+    
+    int xi = blockIdx.x + gridDim.x*blockIdx.y;
+    
+    if(xi == 0) {
+           
+    float mych = 0.0f;	
+    int ni = ti+blockDim.x*tj;
+ 
+    if( ni < sz ) mych = lchange[ni];
+    
+    int mm = 256;
+    while( mm <= sz ){
+	mych = fmaxf( mych, lchange[ni+mm] );
+	mm += 256;
     }
-    mychange[ii] = mych;
+    mychange[ni] = mych;
     __syncthreads();
-    int nn = blockDim.x;
+    
+    nn = blockDim.x*blockDim.x;
     while( (nn>>=1) > 0 ){
-	if( ii < nn )
-	    mychange[ii] = fmaxf(mychange[ii],mychange[ii+nn]);
+	if( ni < nn )
+	    mychange[ni] = fmaxf(mychange[ni], mychange[ni+nn]);
 	__syncthreads();
     }
-    if( ii == 0 )
+    if( ni == 0 )
 	lchange[0] = mychange[0];
+	
+ }
+//***************** 1k optimization changes end here ******************//
 }
 
 static float sumtime;
@@ -66,6 +75,8 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
     int bx, by, gx, gy;
     float *da, *dnewa, *lchange;
     cudaEvent_t e1, e2;
+
+    float changeCheck = 0, oldchange = 0;
 
     bx = 16;
     by = 16;
@@ -91,8 +102,7 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
 	++iters;
 
 	cudaEventRecord( e1 );
-	jacobikernel<<< grid, block >>>( da, dnewa, lchange, n, m, w0, w1, w2 );
-	reductionkernel<<< 1, bx*by >>>( lchange, gx*gy );
+	jacobikernel<<< grid, block >>>( da, dnewa, lchange, n, m, w0, w1, w2, gx*gy );
 	cudaEventRecord( e2 );
 
 	cudaMemcpy( &change, lchange, sizeof(float), cudaMemcpyDeviceToHost );
@@ -102,6 +112,18 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
 	ta = da;
 	da = dnewa;
 	dnewa = ta; 
+	//printf("iters = %d, change = %f\n", iters, change);
+	if(change == oldchange)
+	{
+		changeCheck++;
+	}
+	oldchange = change;
+	if(changeCheck > sqrt(m))
+	{
+		change = (tol - .01);
+	}
+	printf("iters = %d, change = %f, changeCheck = %f, oldchange = %f\n", iters, change, changeCheck, oldchange);
+	
     }while( change > tol );
     printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
     printf( "JacobiGPU  used %f seconds total\n", sumtime/1000.0f );

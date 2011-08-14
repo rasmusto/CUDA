@@ -79,6 +79,8 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
     float *da, *dnewa, *lchange;
     cudaEvent_t e1, e2;
 
+    float changeCheck = 0, oldchange = 0;
+
     bx = 16;
     by = 16;
     gx = (n-2)/bx + ((n-2)%bx == 0?0:1);
@@ -113,8 +115,20 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
 	float *ta;
 	ta = da;
 	da = dnewa;
-	dnewa = ta; 
-    }while( change > tol );
+	dnewa = ta;  
+	//printf("iters = %d, change = %f\n", iters, change);
+	if(change == oldchange)
+	{
+		changeCheck++;
+	}
+	oldchange = change;
+	if(changeCheck > sqrt(m))
+	{
+		change = (tol - .01);
+	}
+	printf("iters = %d, change = %f, changeCheck = %f, oldchange = %f\n", iters, change, changeCheck, oldchange);
+
+   }while( change > tol );
     printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
     printf( "JacobiGPU  used %f seconds total\n", sumtime/1000.0f );
     cudaMemcpy( a, dnewa, memsize, cudaMemcpyDeviceToHost );

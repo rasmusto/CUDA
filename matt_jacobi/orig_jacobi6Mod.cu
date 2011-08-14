@@ -4,7 +4,7 @@
 #include <math.h>
 
  __global__ void
-jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, float w1, float w2, int sz )
+jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, float w1, float w2 )
 {
     int ti = threadIdx.x;
     int tj = threadIdx.y;
@@ -33,54 +33,44 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     int ii = ti+blockDim.x*tj;
     mychange[ii] = fabsf( mnewa - molda );
     __syncthreads();
-    
     int nn = blockDim.x * blockDim.y;
     while( (nn>>=1) > 0 ){
 	if( ii < nn )
 	    mychange[ii] = fmaxf( mychange[ii], mychange[ii+nn] );
 	__syncthreads();
     }
-    
     if( ii == 0 )
 	lchange[blockIdx.x + gridDim.x*blockIdx.y] = mychange[0];
+}
 
-//***************** 1k optimization changes start here ******************//	
-    __syncthreads();		
-    
-    int xi = blockIdx.x + gridDim.x*blockIdx.y;
-    
-    if(xi == 0) {
-           
-    float mych = 0.0f;	
-    int ni = ti+blockDim.x*tj;
- 
-    if( ni < sz ) mych = lchange[ni];
-    
-    int mm = 256;
-    while( mm <= sz ){
-	mych = fmaxf( mych, lchange[ni+mm] );
-	mm += 256;
+ __global__ void
+reductionkernel( float* lchange, int n )
+{
+    __shared__ float mychange[256];
+    float mych = 0.0f;
+    int ii = threadIdx.x, m;
+    if( ii < n ) mych = lchange[ii];
+    m = blockDim.x;
+    while( m <= n ){
+	mych = fmaxf( mych, lchange[ii+m] );
+	m += blockDim.x;
     }
-    mychange[ni] = mych;
+    mychange[ii] = mych;
     __syncthreads();
-    
-    nn = blockDim.x*blockDim.x;
+    int nn = blockDim.x;
     while( (nn>>=1) > 0 ){
-	if( ni < nn )
-	    mychange[ni] = fmaxf(mychange[ni], mychange[ni+nn]);
+	if( ii < nn )
+	    mychange[ii] = fmaxf(mychange[ii],mychange[ii+nn]);
 	__syncthreads();
     }
-    if( ni == 0 )
+    if( ii == 0 )
 	lchange[0] = mychange[0];
-	
- }
-//***************** 1k optimization changes end here ******************//
 }
 
 static float sumtime;
 
 
-void JacobiGPU( float* a, int n, int m, int numThr,  float w0, float w1, float w2, float tol )
+void JacobiGPU( float* a, int n, int m, int numThr, float w0, float w1, float w2, float tol )
 {
     float change;
     int iters;
@@ -89,12 +79,13 @@ void JacobiGPU( float* a, int n, int m, int numThr,  float w0, float w1, float w
     float *da, *dnewa, *lchange;
     cudaEvent_t e1, e2;
 
+    float changeCheck = 0, oldchange = 0;
+
     bx = numThr;
     by = numThr;
     gx = (n-2)/bx + ((n-2)%bx == 0?0:1);
     gy = (m-2)/by + ((m-2)%by == 0?0:1);
-
-    printf("Number of threads = %i and %i.\nNumber of Grids = %i and %i\n", bx, by, gx, gy);
+    printf("Number of threads = %i and %i.\nNumber of Grids = %i and %i.\n", bx, by, gx, gy);
 
     sumtime = 0.0f;
     memsize = sizeof(float) * n * m;
@@ -115,7 +106,8 @@ void JacobiGPU( float* a, int n, int m, int numThr,  float w0, float w1, float w
 	++iters;
 
 	cudaEventRecord( e1 );
-	jacobikernel<<< grid, block >>>( da, dnewa, lchange, n, m, w0, w1, w2, gx*gy );
+	jacobikernel<<< grid, block >>>( da, dnewa, lchange, n, m, w0, w1, w2 );
+	reductionkernel<<< 1, bx*by >>>( lchange, gx*gy );
 	cudaEventRecord( e2 );
 
 	cudaMemcpy( &change, lchange, sizeof(float), cudaMemcpyDeviceToHost );
@@ -124,7 +116,19 @@ void JacobiGPU( float* a, int n, int m, int numThr,  float w0, float w1, float w
 	float *ta;
 	ta = da;
 	da = dnewa;
-	dnewa = ta; 
+	dnewa = ta;  
+	//printf("iters = %d, change = %f\n", iters, change);
+	if(change == oldchange)
+	{
+		changeCheck++;
+	}
+	oldchange = change;
+	if(changeCheck > sqrt(m))
+	{
+		change = (tol - .01);
+	}
+	printf("iters = %d, change = %f, changeCheck = %f, oldchange = %f\n", iters, change, changeCheck, oldchange);
+
     }while( change > tol );
     printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
     printf( "JacobiGPU  used %f seconds total\n", sumtime/1000.0f );
@@ -169,7 +173,7 @@ int main( int argc, char* argv[] )
     m = n;
     if( argc > 3 ){
 	m = atoi( argv[2] );
-	numThr = atoi (argv[3] );
+	numThr = atoi( argv[3] );
 	if( m <= 0 ) m = 100;
     }
 
