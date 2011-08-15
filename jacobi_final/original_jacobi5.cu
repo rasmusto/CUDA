@@ -106,7 +106,21 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
 	da = dnewa;
 	dnewa = ta;  
     }while( change > tol );
+    double time = sumtime/1000.0f;
+
+    double dNumOps = 14.0 * iters * n *m;
+
+    double gflops = dNumOps/time/1e9;
+
+
+
     printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
+
+    printf( "JacobiGPU  used %.5f seconds total\n", sumtime/1000.0f );
+
+    printf( "Size(Number of Operations) = %.0f Ops/sec \n", dNumOps );
+
+    printf( "Throughtput = %.4f GFlops/sec \n",gflops );printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
     printf( "JacobiGPU  used %f seconds total\n", sumtime/1000.0f );
     cudaMemcpy( a, dnewa, memsize, cudaMemcpyDeviceToHost );
     cudaFree( da );
@@ -115,6 +129,7 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
     cudaEventDestroy( e1 );
     cudaEventDestroy( e2 );
 }
+
 
 static void init( float* a, int n, int m )
 {
