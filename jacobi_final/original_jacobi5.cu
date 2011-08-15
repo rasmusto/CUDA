@@ -36,10 +36,11 @@ reductionkernel( float* lchange, int n )
 {
     __shared__ float mychange[256];
     float mych = 0.0f;
-    int ii = threadIdx.x, m;
+    int ii = threadIdx.x;
     if( ii < n ) mych = lchange[ii];
-    m = blockDim.x;
-    while( m <= n ){
+    int m = blockDim.x;
+    while( m < n ){
+	if(ii+m < n)  
 	mych = fmaxf( mych, lchange[ii+m] );
 	m += blockDim.x;
     }
@@ -69,8 +70,10 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
 
     bx = 16;
     by = 16;
-    gx = (n-2)/bx + ((n-2)%bx == 0?0:1);
-    gy = (m-2)/by + ((m-2)%by == 0?0:1);
+    gx = (n-2)/bx ; 
+/////////////////////// + ((n-2)%bx == 0?0:1);
+    gy = (m-2)/by ; 
+// ssssssssssssssssssssssssssssssssssssssssssssssss+ ((m-2)%by == 0?0:1);
 
     sumtime = 0.0f;
     memsize = sizeof(float) * n * m;
