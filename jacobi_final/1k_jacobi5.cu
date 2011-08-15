@@ -29,15 +29,14 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     }
     if( ii == 0 )
 	lchange[blockIdx.x + gridDim.x*blockIdx.y] = mychange[0];
-	
+
 //***************** 1k optimization changes start here ******************//
 	__syncthreads();
-		
     
     int xi = blockIdx.x + gridDim.x*blockIdx.y;
     
     if(xi == 0) {
-           
+
     float mych = 0.0f;	
     int ni = ti+blockDim.x*tj;
  
@@ -66,7 +65,6 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
 }
 
 static float sumtime;
-
 
 void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol )
 {
