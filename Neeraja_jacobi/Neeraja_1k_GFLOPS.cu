@@ -14,7 +14,7 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     float mnewa, molda;
 
 
-    mychange[tj*18+ti] = a[(j-1)*m+i-1];
+    mychange[tj*18+ti] = a[(j-1)*m+(i-1)];
     if( ti < 2 ) mychange[tj*18+ti+16] = a[(j-1)*m+i+15];
     if( tj < 2 ) mychange[(tj+16)*18+ti] = a[(j+15)*m+i-1];
     if( tj < 2 && ti < 2 ) mychange[(tj+16)*18+ti+16] = a[(j+15)*m+i+15];
@@ -74,7 +74,7 @@ static float sumtime;
 
 void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol )
 {
-    float change;
+    float change=0.0;
     int iters;
     size_t memsize;
     int bx, by, gx, gy;
@@ -118,7 +118,7 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
     }while( change > tol );
 
     double time = sumtime/1000.0f;
-    double dNumOps = 61.0*iters*bx*by*gx*gy + 112.0 + (gx+gy)*7;
+    double dNumOps = 15 * iters * n * m;
     double gflops = dNumOps/time/1e9;
 
     printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
