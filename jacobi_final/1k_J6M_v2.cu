@@ -60,6 +60,7 @@ jacobikernel( float* a, float* newa, float* lchange, int n, int m, float w0, flo
     
     int mm = THR*THR;
     while( mm <= sz ){
+	if(ni+mm < sz)
 	mych = fmaxf( mych, lchange[ni+mm] );
 	mm += THR*THR;
     }
