@@ -54,6 +54,7 @@ reductionkernel( float* lchange, int n, int THR )
     if( ii < n ) mych = lchange[ii];
     m = blockDim.x;
     while( m <= n ){
+	if(ii+m < n)
 	mych = fmaxf( mych, lchange[ii+m] );
 	m += blockDim.x;
     }
