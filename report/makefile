@@ -2,10 +2,10 @@ DOCNAME=report
 OUTLINE=skeleton
 
 skeleton:
-	pdflatex ${OUTLINE}.tex
+	pdflatex -shell-escape ${OUTLINE}.tex
 
 report:
-	pdflatex ${DOCNAME}.tex
+	pdflatex -shell-escape ${DOCNAME}.tex
 
 clean:
 	rm -rf ${DOCNAME}.aux ${DOCNAME}.pdf ${DOCNAME}.log
