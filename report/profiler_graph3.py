@@ -15,8 +15,8 @@ orij5_jacobi_mem_throughput = [41.7332,47.3507,65.9734,76.5066,68.0308,67.5396,6
 orij6_jacobi_mem_throughput = [12.4006,18.1979,31.0801,32.2656,32.6264,33.1604,33.2914]
 onekj6_jacobi_mem_throughput =  [9.33343,14.9829,28.3336,30.1745,30.4039,30.9456,31.1163]
 
-names = [   'orij5_jacobi_mem_throughput'
-            'orij6_jacobi_mem_throughput'
+names = [   'orij5_jacobi_mem_throughput',
+            'orij6_jacobi_mem_throughput',
             'onekj6_jacobi_mem_throughput']
 
 ax.plot(matrix_size, orij5_jacobi_mem_throughput,      marker='o', c=colors[0], alpha=0.75)

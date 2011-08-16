@@ -22,8 +22,8 @@ names = [   'orij5_jacobi_instr_throughput',
             '1kj6_jacobi_instr_throughput']
 
 ax.plot(matrix_size, orij5_jacobi_instr_throughput,      marker='o', c=colors[0], alpha=0.75)
-ax.plot(matrix_size, orij6_jacobi_instr_throughput,      marker='o', c=colors[2], alpha=0.75)
-ax.plot(matrix_size, onekj6_jacobi_instr_throughput,     marker='o', c=colors[4], alpha=0.75)
+ax.plot(matrix_size, orij6_jacobi_instr_throughput,      marker='o', c=colors[1], alpha=0.75)
+ax.plot(matrix_size, onekj6_jacobi_instr_throughput,     marker='o', c=colors[2], alpha=0.75)
 
 ax.set_xlabel('Matrix Size', fontsize=20)
 ax.set_ylabel('Instruction throughput', fontsize=20)

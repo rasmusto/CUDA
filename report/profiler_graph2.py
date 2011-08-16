@@ -19,8 +19,8 @@ names = [   'orij5_reduction_instr_throughput',
             'orij6_reduction_instr_throughput']
 
 
-ax.plot(matrix_size, orij5_reduction_instr_throughput,   marker='o', c=colors[1], alpha=0.75)
-ax.plot(matrix_size, orij6_reduction_instr_throughput,   marker='o', c=colors[3], alpha=0.75)
+ax.plot(matrix_size, orij5_reduction_instr_throughput,   marker='o', c=colors[0], alpha=0.75)
+ax.plot(matrix_size, orij6_reduction_instr_throughput,   marker='o', c=colors[1], alpha=0.75)
 
 ax.set_xlabel('Matrix Size', fontsize=20)
 ax.set_ylabel('Instruction throughput', fontsize=20)
