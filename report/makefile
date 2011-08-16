@@ -2,7 +2,8 @@ DOCNAME=report
 OUTLINE=skeleton
 
 skeleton:
-	pdflatex -shell-escape ${OUTLINE}.tex
+	xelatex -shell-escape ${OUTLINE}.tex
+	#pdflatex -shell-escape ${OUTLINE}.tex
 
 report:
 	pdflatex -shell-escape ${DOCNAME}.tex

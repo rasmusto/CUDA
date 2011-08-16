@@ -7,9 +7,13 @@
 \usepackage{verbatim}
 \usepackage{graphicx}
 \usepackage{listings}
+\usepackage{fontspec}
 
 \usepackage{multicol}
 \usepackage{minted}
+
+\setsansfont{Calibri}
+\setmonofont{Consolas}
 
 \usemintedstyle{solarized}
 
@@ -33,17 +37,21 @@
 \makeatother
 
 \begin{document}
-\maketitle
-\thispagestyle{empty}
-\clearpage
+\renewcommand{\theFancyVerbLine}{
+  \sffamily\textcolor[rgb]{0.5,0.5,0.5}{\scriptsize\arabic{FancyVerbLine}}}
 
-\tableofcontents
-\setcounter{page}{1}
-\clearpage
+\maketitle
+%\thispagestyle{empty}
+%\clearpage
+
+%\tableofcontents
+%\setcounter{page}{1}
+%\clearpage
 
 \begin{multicols}{2}
-\section{Abstract}
+\begin{abstract}
 Abstract text here.
+\end{abstract}
 \section{Introduction} %background/context, the idea, summary of results
 The graphics processing unit (GPU) is an application-specific device aimed at rapidly building images for viewing on a display.
 Over the past decade, GPUs have become more and more general purpose, and can now be called general purpose GPUs (GP-GPUs).
