@@ -17,15 +17,16 @@ files = ['data/1kmod_b10.csv',
 'data/j6mod_b16.csv',
 'data/j6mod_b20.csv']
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
+colors = ['r', 'g', 'b', 'c', 'm', 'k']
 
-mpl.rcParams['axes.color_cycle'] = ['r', 'g', 'b', 'c', 'y', 'm', 'k']
+############### LOOP 1 ##############
+fig1 = plt.figure(figsize=(10,10))
+ax1 = fig1.add_subplot(111)
 
+i = 0
 for file in files:
     print "parsing ", file
     reader = csv.DictReader(open(file, 'rb'), delimiter='\t', quotechar='"')
-#workers = [ageName(row[0], row[1]) for row in reader]
 
     matrix_size = []
     grid_size = []
@@ -45,20 +46,15 @@ for file in files:
         total_time.append(float(row['Total Time']))
         #memory_throughput.append(float(row['Memory Throughput']))
         #instruction_throughput.append(float(row['Instruction Throughput']))
+    ax1.scatter(matrix_size, gpu_time, marker='o', c=colors[i%6], alpha=0.75)
+    i += 1
 
-#print matrix_size
-#print gpu_time
+ax1.set_xlabel('Matrix Size', fontsize=20)
+ax1.set_ylabel('Grid Size', fontsize=20)
 
-#print len(matrix_size)
-#print len(gpu_time)
-
-
-    ax.scatter(matrix_size, gpu_time, marker='o', alpha=0.75)
-
-ax.set_xlabel('Matrix Size', fontsize=20)
-ax.set_ylabel('Grid Size', fontsize=20)
-
-ax.set_title('1 Kernel: Block size = 10')
-ax.grid(True)
+ax1.set_title('1 Kernel: Block size = 10')
+ax1.grid(True)
+plt.legend( (files), loc=2, borderaxespad=0. )
+#####################################
 
 plt.show()
