@@ -157,12 +157,27 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
 
     \begin{center}
     \begin{figure}
-        \includegraphics[width=8cm]{bar.pdf}
-        \caption{Matrix size and time taken for varying block sizes: 16x16, 10x10 and 20x20}
-        \label{fig:time_taken}
+        \includegraphics[width=8cm]{graphs/a1.pdf}
+        \caption{Caption}
+        \label{fig:time_taken1}
     \end{figure}
     \end{center}
-    %-----Notes about the results
+    
+    \begin{center}
+    \begin{figure}
+        \includegraphics[width=8cm]{graphs/b1.pdf}
+        \caption{Caption}
+        \label{fig:time_taken2}
+    \end{figure}
+    \end{center}
+
+    \begin{center}
+    \begin{figure}
+        \includegraphics[width=8cm]{graphs/c1.pdf}
+        \caption{Caption}
+        \label{fig:time_taken3}
+    \end{figure}
+    \end{center}
 
     \subsection{Throughput}
     Throughput, here is typically the amount of work the GPU does in a given amount of time.
@@ -182,25 +197,6 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
         \label{tab:input_throughput}
     \end{table}
 
-    \begin{center}
-    \begin{figure}
-        \includegraphics[width=8cm]{bar.pdf}
-        \caption{Global memory throughput}
-        \label{fig:global_mem_throughput}
-    \end{figure}
-    \end{center}
-
-    %---- Notes on results
-
-    \begin{center}
-    \begin{figure}
-        \includegraphics[width=8cm]{bar.pdf}
-        \caption{Instruction throughput}
-        \label{fig:instruction_throughput}
-    \end{figure}
-    \end{center}
-
-    %----- Notes on results
     \subsection{GFLOPS}
     FLOPS are typically the measure of a computer’s performance.
     This is similar to the number of instructions per second, but we consider only the floating point operations.
@@ -210,7 +206,29 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     We then compared the gained GFLOPS with the benchmark.
     Here are the tabulated results.
 
-    %-------table for GFLOPS
+    \begin{center}
+    \begin{figure}
+        \includegraphics[width=8cm]{graphs/a2.pdf}
+        \caption{Caption}
+        \label{fig:gflops1}
+    \end{figure}
+    \end{center}
+
+    \begin{center}
+    \begin{figure}
+        \includegraphics[width=8cm]{graphs/b2.pdf}
+        \caption{Caption}
+        \label{fig:gflops2}
+    \end{figure}
+    \end{center}
+
+    \begin{center}
+    \begin{figure}
+        \includegraphics[width=8cm]{graphs/c2.pdf}
+        \caption{Caption}
+        \label{fig:gflops3}
+    \end{figure}
+    \end{center}
 
     \subsection{Occupancy}
     Executing other warps when one warp is paused is the only way to hide latencies and keep the hardware busy.
@@ -218,27 +236,6 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     We used the CUDA occupancy calculator and the Compute Profiler  to calculate the multiprocessor occupancy of a GPU by a given CUDA kernel.
     Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads().
     The occupancy is determined by the amount of shared memory and registers used by each thread block.
-
-    \begin{center}
-    \begin{figure}
-        \includegraphics[width=8cm]{scatter.pdf}
-        \caption{Varying block size}
-        \label{fig:varying_block_size}
-    \end{figure}
-    \end{center}
-
-    %--- Notes on results
-
-    \begin{center}
-    \begin{figure}
-        \includegraphics[width=8cm]{scatter.pdf}
-        \caption{Varying register count}
-        \label{fig:varying_register_count}
-    \end{figure}
-    \end{center}
-
-    %Speed Up:
-
 
 \subsection{Summary} % of results with graphs/tables/etc.
 
