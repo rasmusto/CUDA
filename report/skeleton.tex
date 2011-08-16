@@ -1,5 +1,4 @@
 %LATEX Header
-%\documentclass[10pt, twocolumn]{article}
 \documentclass[10pt]{article}
 \usepackage[letterpaper]{geometry}
 \geometry{top=1.0in, bottom=1.0in, left=1.0in, right=1.0in}
@@ -35,6 +34,13 @@
 
 \begin{document}
 \maketitle
+\thispagestyle{empty}
+\clearpage
+
+\tableofcontents
+\setcounter{page}{1}
+\clearpage
+
 \begin{multicols}{2}
 \section{Abstract}
 Abstract text here.
@@ -179,7 +185,7 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     \begin{center}
     \begin{figurehere}
         \includegraphics[width=8cm]{graphs/a1.pdf}
-        \caption{Caption}
+        \caption{}
         \label{fig:time_taken1}
     \end{figurehere}
     \end{center}
@@ -187,7 +193,7 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     \begin{center}
     \begin{figurehere}
         \includegraphics[width=8cm]{graphs/b1.pdf}
-        \caption{Caption}
+        \caption{}
         \label{fig:time_taken2}
     \end{figurehere}
     \end{center}
@@ -195,7 +201,7 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     \begin{center}
     \begin{figurehere}
         \includegraphics[width=8cm]{graphs/c1.pdf}
-        \caption{Caption}
+        \caption{}
         \label{fig:time_taken3}
     \end{figurehere}
     \end{center}
@@ -230,7 +236,7 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     \begin{center}
     \begin{figurehere}
         \includegraphics[width=8cm]{graphs/a2.pdf}
-        \caption{Caption}
+        \caption{}
         \label{fig:gflops1}
     \end{figurehere}
     \end{center}
@@ -238,7 +244,7 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     \begin{center}
     \begin{figurehere}
         \includegraphics[width=8cm]{graphs/b2.pdf}
-        \caption{Caption}
+        \caption{}
         \label{fig:gflops2}
     \end{figurehere}
     \end{center}
@@ -246,7 +252,7 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     \begin{center}
     \begin{figurehere}
         \includegraphics[width=8cm]{graphs/c2.pdf}
-        \caption{Caption}
+        \caption{}
         \label{fig:gflops3}
     \end{figurehere}
     \end{center}
@@ -284,25 +290,19 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
 
 \section{Appendix A: Code}
 
-\begin{minted}[fontsize=\footnotesize]{python}
-def boring(args = None):
-    pass
-\end{minted}
-
-\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_J6M_v2.cu}
-\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_jacobi5.cu}
-\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_jacobi6.cu}
-\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/orig_J6M_v2.cu}
-\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi5.cu}
-\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi6.cu}
+\subsection{Sequential Code}
 \inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/seq_jacobi.c}
 
-%\lstinputlisting[language=C]{../jacobi_final/1k_J6M_v2.cu}
-%\lstinputlisting[language=C]{../jacobi_final/1k_jacobi5.cu}
-%\lstinputlisting[language=C]{../jacobi_final/1k_jacobi6.cu}
-%\lstinputlisting[language=C]{../jacobi_final/orig_J6M_v2.cu}
-%\lstinputlisting[language=C]{../jacobi_final/original_jacobi5.cu}
-%\lstinputlisting[language=C]{../jacobi_final/original_jacobi6.cu}
-%\lstinputlisting[language=C]{../jacobi_final/seq_jacobi.c}
+\subsection{Michael Wolfe's Code}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi5.cu}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi6.cu}
+
+\subsection{One Kernel Implementation}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_jacobi5.cu}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_jacobi6.cu}
+
+\subsection{Adjustable Thread Count Implementation}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/orig_J6M_v2.cu}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_J6M_v2.cu}
 
 \end{document}
