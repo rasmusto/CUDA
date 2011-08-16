@@ -8,10 +8,10 @@ colors = ['r', 'g', 'b', 'c', 'm', 'k']
 
 files = ['data/j5_original_16.csv',
 'data/j6_original_16.csv',
-'data/j6mod_10.csv',
-'data/j6mod_14.csv',
+'data/j5_1k_16.csv',
+'data/j6_1k_16.csv',
+'data/1kmod_16.csv']
 'data/j6mod_16.csv',
-'data/j6mod_20.csv']
 
 ############### LOOP ##############
 fig = plt.figure()
@@ -45,7 +45,7 @@ for file in files:
         gflops.append(float(row['GFLOPS']))
         #occupancy.append(float(row['Occupancy']))
 
-    ax.scatter(matrix_size, gpu_time, marker='o', c=colors[i%6], alpha=0.75)
+    ax.plot(matrix_size, gpu_time, marker='o', c=colors[i%6], alpha=0.75)
     i += 1
 
 ax.set_xlabel('Matrix Size', fontsize=20)

@@ -45,7 +45,7 @@ for file in files:
         gflops.append(float(row['GFLOPS']))
         #occupancy.append(float(row['Occupancy']))
 
-    ax.scatter(matrix_size, gpu_time, marker='o', c=colors[i%6], alpha=0.75)
+    ax.plot(matrix_size, gpu_time, marker='o', c=colors[i%6], alpha=0.75)
     i += 1
 
 ax.set_xlabel('Matrix Size', fontsize=20)
