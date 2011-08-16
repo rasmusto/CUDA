@@ -1,11 +1,29 @@
 #!/usr/bin/env python
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import csv
 
-list files = ['data/1kmod_b10.csv', 'data/1kmod_b14.csv', 'data/1kmod_b16.csv', 'data/1kmod_b20.csv', 'data/j5_1k_b16.csv', 'data/j5_original_b16.csv', 'data/j6_1k_b16.csv', 'data/j6_original_b16.csv', 'data/j6mod_b10.csv', 'data/j6mod_b14.csv', 'data/j6mod_b16.csv', 'data/j6mod_b20.csv']
+files = ['data/1kmod_b10.csv',
+'data/1kmod_b14.csv',
+'data/1kmod_b16.csv',
+'data/1kmod_b20.csv',
+'data/j5_1k_b16.csv',
+'data/j5_original_b16.csv',
+'data/j6_1k_b16.csv',
+'data/j6_original_b16.csv',
+'data/j6mod_b10.csv',
+'data/j6mod_b14.csv',
+'data/j6mod_b16.csv',
+'data/j6mod_b20.csv']
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+mpl.rcParams['axes.color_cycle'] = ['r', 'g', 'b', 'c', 'y', 'm', 'k']
 
 for file in files:
+    print "parsing ", file
     reader = csv.DictReader(open(file, 'rb'), delimiter='\t', quotechar='"')
 #workers = [ageName(row[0], row[1]) for row in reader]
 
@@ -34,15 +52,13 @@ for file in files:
 #print len(matrix_size)
 #print len(gpu_time)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
 
-    ax.scatter(matrix_size, gpu_time, marker='o', c='g', alpha=0.75)
+    ax.scatter(matrix_size, gpu_time, marker='o', alpha=0.75)
 
-    ax.set_xlabel('Matrix Size', fontsize=20)
-    ax.set_ylabel('Grid Size', fontsize=20)
+ax.set_xlabel('Matrix Size', fontsize=20)
+ax.set_ylabel('Grid Size', fontsize=20)
 
-    ax.set_title('1 Kernel: Block size = 10')
-    ax.grid(True)
+ax.set_title('1 Kernel: Block size = 10')
+ax.grid(True)
 
-    plt.show()
+plt.show()
