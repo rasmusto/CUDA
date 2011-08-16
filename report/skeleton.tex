@@ -26,15 +26,15 @@
 \author{Neeraja Budamagunta, Torben Rasmussen, Sweta Sharma, John Wehland, Matthew Wolfe}
 \date{7/20/2011}
 
-\makeatletter
-\newenvironment{tablehere}
-    {\def\@capttype{table}}
-    {}
-
-\newenvironment{figurehere}
-    {\def\@captype{figure}}
-    {}
-\makeatother
+%\makeatletter
+%\newenvironment{tablehere}
+%    {\def\@capttype{table}}
+%    {}
+%
+%\newenvironment{figurehere}
+%    {\def\@captype{figure}}
+%    {}
+%\makeatother
 
 \begin{document}
 \renewcommand{\theFancyVerbLine}{
@@ -104,9 +104,9 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     However this is a possible way of optimization which did give us positive results.
     In the table below we have shown a few array sizes, their performance with one kernel (our implementation), performance with two kernels \cite{michael} and the performance improvement of one kernel, over two kernel implementation.
 
-    \begin{center}
     %\begin{table*}[ht]
     \begin{table*}[ht]\footnotesize
+        \centering
         \begin{tabular}{ | p{1.3cm} | p{1.5cm} | p{1.5cm} | p{1.6cm} | p{1.6cm} | p{2cm} | p{1.9cm} | p{2cm} | }
             \hline
             Array Size  & One kernel total time (s) & Two kernel total time (s) & One kernel calc. time (s) & Two kernel calc. time (s) & Improvement on total time (s) & Improvement on calc. time (s) & Improvement in calc. time: 1 kernel over 2 kernel (\%) \\ \hline
@@ -122,9 +122,7 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
         \end{tabular}
         \caption{Timing results of different Jacobi Relaxation implementations}
         \label{tab:timing}
-        \end{table*}
-    \end{center}
-    %\clearpage
+    \end{table*}
 
     \subsection{Performance Tuning}
     The performance of the GPU is traditionally obtained at the algorithmic level.
@@ -151,9 +149,9 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     Here is the sample code that we used:
 
     \begin{minted}[fontsize=\footnotesize]{c}
-    gettimeofday( &tt1, NULL );
-    JacobiGPU( a, n, m, .2, .1, .1, .1 );
-    gettimeofday( &tt2, NULL );
+    gettimeofday(&tt1, NULL);
+    JacobiGPU(a, n, m, .2, .1, .1, .1);
+    gettimeofday(&tt2, NULL);
     ms = (tt2.tv_sec - tt1.tv_sec);
     ms = ms * 1000000 + (tt2.tv_usec \
         - tt1.tv_usec);
@@ -168,10 +166,10 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     Here is the sample code that we used before and after the kernel call. 
 
     \begin{minted}[fontsize=\footnotesize]{c}
-    cudaEventRecord( e2 );
-    cudaMemcpy( &change, lchange, \
-        sizeof(float), cudaMemcpyDeviceToHost );
-    cudaEventElapsedTime( &msec, e1, e2 );
+    cudaEventRecord(e2);
+    cudaMemcpy(&change, lchange, \
+        sizeof(float), cudaMemcpyDeviceToHost);
+    cudaEventElapsedTime(&msec, e1, e2);
     sumtime += msec;
     \end{minted}
 
@@ -190,29 +188,26 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
         \label{tab:inputs_time_taken}
     \end{table}
 
-    \begin{center}
-    \begin{figurehere}
+    \begin{figure*}
+        \centering
         \includegraphics[width=8cm]{graphs/a1.pdf}
         \caption{}
         \label{fig:time_taken1}
-    \end{figurehere}
-    \end{center}
+    \end{figure*}
     
-    \begin{center}
-    \begin{figurehere}
+    \begin{figure*}
+        \centering
         \includegraphics[width=8cm]{graphs/b1.pdf}
         \caption{}
         \label{fig:time_taken2}
-    \end{figurehere}
-    \end{center}
+    \end{figure*}
 
-    \begin{center}
-    \begin{figurehere}
+    \begin{figure*}
+        \centering
         \includegraphics[width=8cm]{graphs/c1.pdf}
         \caption{}
         \label{fig:time_taken3}
-    \end{figurehere}
-    \end{center}
+    \end{figure*}
 
     \subsection{Throughput}
     Throughput, here is typically the amount of work the GPU does in a given amount of time.
@@ -241,29 +236,26 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     We then compared the gained GFLOPS with the benchmark.
     Here are the tabulated results.
 
-    \begin{center}
-    \begin{figurehere}
+    \begin{figure*}
+        \centering
         \includegraphics[width=8cm]{graphs/a2.pdf}
         \caption{}
         \label{fig:gflops1}
-    \end{figurehere}
-    \end{center}
+    \end{figure*}
 
-    \begin{center}
-    \begin{figurehere}
+    \begin{figure*}
+        \centering
         \includegraphics[width=8cm]{graphs/b2.pdf}
         \caption{}
         \label{fig:gflops2}
-    \end{figurehere}
-    \end{center}
+    \end{figure*}
 
-    \begin{center}
-    \begin{figurehere}
+    \begin{figure*}
+        \centering
         \includegraphics[width=8cm]{graphs/c2.pdf}
         \caption{}
         \label{fig:gflops3}
-    \end{figurehere}
-    \end{center}
+    \end{figure*}
 
     \subsection{Occupancy}
     Executing other warps when one warp is paused is the only way to hide latencies and keep the hardware busy.
