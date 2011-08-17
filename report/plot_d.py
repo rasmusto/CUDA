@@ -3,21 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import csv
+import math
 
 colors = ['r', 'g', 'b', 'c', 'm', 'k']
 
-files = ['data/1kmod_10.csv', #THIS SHOULD BE SEQUENTIAL
-'data/1kmod_14.csv',
-'data/1kmod_16.csv',
-'data/1kmod_20.csv',
-'data/j5_1k_16.csv',
-'data/j5_original_16.csv',
-'data/j6_1k_16.csv',
-'data/j6_original_16.csv',
-'data/j6mod_10.csv',
-'data/j6mod_14.csv',
-'data/j6mod_16.csv',
-'data/j6mod_20.csv']
+files = ['data\seq.csv']
 
 ############### LOOP ##############
 fig = plt.figure()
@@ -41,22 +31,23 @@ for file in files:
 
     for row in reader:
         matrix_size.append(float(row['Matrix Size']))
-        grid_size.append(float(row['Grid Size']))
+        #matrix_size.append(math.pow(float(row['Matrix Size']), 2))
+        #grid_size.append(float(row['Grid Size']))
         iterations.append(float(row['No of iterations']))
         residual.append(float(row['Residual']))
-        gpu_time.append(float(row['GPU Time Taken']))
+        #gpu_time.append(float(row['GPU Time Taken']))
         total_time.append(float(row['Total Time']))
         #memory_throughput.append(float(row['Memory Throughput']))
         #instruction_throughput.append(float(row['Instruction Throughput']))
-        gflops.append(float(row['GFLOPS']))
+        #gflops.append(float(row['GFLOPS']))
         #occupancy.append(float(row['Occupancy']))
 
-    ax.plot(matrix_size, gflops, marker='o', c=colors[i%6], alpha=0.75)
+    ax.plot(matrix_size, total_time, marker='o', c=colors[i%6], alpha=0.75)
     i += 1
 
 ax.set_xlabel('Matrix Size', fontsize=20)
-ax.set_ylabel('GFLOPS', fontsize=20)
-ax.set_title('GFLOPS vs Array Size')
+ax.set_ylabel('Time taken (s)', fontsize=20)
+ax.set_title('Time taken vs Matrix Size')
 ax.grid(True)
 
 plt.legend( (files), loc=4, borderaxespad=0. )
