@@ -3,7 +3,9 @@
 \usepackage[letterpaper]{geometry}
 \geometry{top=1.0in, bottom=1.0in, left=1.0in, right=1.0in}
 \usepackage{times}
-\usepackage{amssymb,amsmath}
+%\usepackage{amssymb,amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}%added this
 \usepackage{verbatim}
 \usepackage{graphicx}
 \usepackage{listings}
@@ -17,6 +19,10 @@
 
 \usemintedstyle{solarized}
 
+\usepackage{booktabs}
+
+\renewcommand{\arraystretch}{1.2}
+
 \renewcommand\theFancyVerbLine{\small\arabic{FancyVerbLine}}
 
 \lstset{frame=single, basicstyle=\footnotesize, breaklines=true, numbers=left}
@@ -26,11 +32,11 @@
 \author{Neeraja Budamagunta, Torben Rasmussen, Sweta Sharma, John Wehland, Matthew Wolfe}
 \date{7/20/2011}
 
-%\makeatletter
-%\newenvironment{tablehere}
-%    {\def\@capttype{table}}
-%    {}
-%
+\makeatletter
+\newenvironment{tablehere}
+    {\def\@capttype{table}}
+    {}
+
 %\newenvironment{figurehere}
 %    {\def\@captype{figure}}
 %    {}
@@ -71,6 +77,85 @@ In section 4 we discuss work related to ours and finally conclude in section 5.
 We had limited goals due to shortage of time and resources, so we discuss future work in section 6.
 
     \subsection{Background} %CUDA, math
+    The Jacobi Relaxation is a commonly used iterative method for solving systems of equations.
+    It uses the main, upper, and lower diagonals of the matrix.
+    Able to parallelize the computations on individual elements of the matrix to a large extent.
+    This makes it very worthwhile to implement on CUDA architecture.
+
+    The general form for a system of linear equations is (in matrix form):
+    \[A*u=f\]
+    Our particular implementation of the relaxation uses a weight \(w\) to help it converge more quickly:
+    \[x^{(i)} = x^{(i-1)} * (1-w)+w*(D^{-1}(f-(L+U))*x^{(i-1)}\]
+    The remaining parameters will now be discussed in more detail.
+    \(A\) and \(f\) are the known equation coefficients and constant solutions.
+    \(u\) is the unknown solution matrix.
+    \(x^{(0)}\) is an initial guess for the matrix u.
+    \(x^{(i)}\) is the \(i^{th}\) iteration of the Jacobi relaxation.
+    The algorithm is said to be done when the solution converges, or when the solution is within a predetermined error boundary.
+    Each previous value of \(x^{(i)}\) is used in the next iteration of the algorithm.
+    \(D\) is composed of a matrix of the same size as \(A\), with zeros in all places besides the main diagonal:
+    \[
+        D =
+        \begin{bmatrix*}
+        A_{1,1}     & 0         & 0 \\
+        0           & \ddots    & 0 \\
+        0           & 0         & A_{i,i}
+        \end{bmatrix*}
+    \]
+    \(D^{-1}\) is simply the matrix where each element of \(D\) is inverted:
+    \[
+        D^{-1} =
+        \begin{bmatrix*}
+        \frac{1}{A_{1,1}}   & 0         & 0 \\
+        0                   & \ddots    & 0 \\
+        0                   & 0         & \frac{1}{A_{i,i}}
+        \end{bmatrix*}
+    \]
+    The lower and upper diagonal are the diagonals that run parallel to the main diagonal:
+    \[
+        \begin{bmatrix*}
+        D & U & x \\
+        L & D & U \\
+        x & L & D
+        \end{bmatrix*}
+        \to
+        L=
+        \begin{bmatrix*}
+        0 & 0               & 0 \\
+        A_{0,1} & 0         & 0 \\
+        0       & A_{1,2}   & 0
+        \end{bmatrix*}
+        ,
+        U=
+        \begin{bmatrix*}
+        0 & A_{1,0} & 0       \\
+        0 & 0       & A_{2,1} \\
+        0 & 0       & 0
+        \end{bmatrix*}
+    \]
+    
+    \subsection{System Specifications}
+    The device we used to run and benchmark our implementations is an Nvidia Tesla C1060.
+
+    \begin{table*} \centering
+    \begin{tabular}{@{}l l@{}}\toprule
+    Spec                            &   Value               \\
+    \hline
+    Compute Capability              &   1.3                 \\
+    Dedicated global memory         &   4294770688 (4GiB)   \\
+    Total Constant Memory           &   65536 (64kiB)       \\
+    Scalar Processors per GPU       &   240                 \\
+    Streaming Multiprocessor \
+    Count                           &   30                  \\
+    Shared memory per MP            &   16384 (16kiB)       \\
+    Registers per MP                &   16384 (16kiB)       \\
+    Threads per warp                &   32                  \\
+    Max threads per block           &   512                 \\
+    Max thread dimensions           &   (512 512 64)        \\
+    Max Grid dimensions             &   (65535 65535 1)     \\
+    \hline
+    \end{tabular}
+    \end{table*}
 
 \section{Our Project}
     \subsection{Requirements} %hardware, software
@@ -104,25 +189,24 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     However this is a possible way of optimization which did give us positive results.
     In the table below we have shown a few array sizes, their performance with one kernel (our implementation), performance with two kernels \cite{michael} and the performance improvement of one kernel, over two kernel implementation.
 
-    %\begin{table*}[ht]
-    \begin{table*}[ht]\footnotesize
-        \centering
-        \begin{tabular}{ | p{1.3cm} | p{1.5cm} | p{1.5cm} | p{1.6cm} | p{1.6cm} | p{2cm} | p{1.9cm} | p{2cm} | }
-            \hline
-            Array Size  & One kernel total time (s) & Two kernel total time (s) & One kernel calc. time (s) & Two kernel calc. time (s) & Improvement on total time (s) & Improvement on calc. time (s) & Improvement in calc. time: 1 kernel over 2 kernel (\%) \\ \hline
-            130x130 & 0.108135    & 0.106293    & 0.009158    & 0.010240    & 0.98296574  & 1.11814807  & 10.5  \\
-            146x146 & 0.104811    & 0.106242    & 0.010526    & 0.011699    & 1.01365315  & 1.11143834  & 10    \\
-            162x162 & 0.131627    & 0.115655    & 0.014078    & 0.015089    & 0.87865711  & 1.07181418  & 6.7   \\
-            178x178 & 0.115519    & 0.118052    & 0.018908    & 0.020070    & 1.02192713  & 1.06145547  & 5.7   \\
-            194x194 & 0.119967    & 0.119893    & 0.021031    & 0.022331    & 0.99938316  & 1.06181351  & 5.8   \\
-            210x210 & 0.125773    & 0.128649    & 0.024906    & 0.026340    & 1.02286659  & 1.05757649  & 5.4   \\
-            226x226 & 0.128909    & 0.130154    & 0.029529    & 0.030782    & 1.00965798  & 1.04243286  & 4     \\
-            242x242 & 0.137315    & 0.150276    & 0.034656    & 0.037037    & 1.09438881  & 1.06870383  & 6.4   \\
-            \hline
-        \end{tabular}
-        \caption{Timing results of different Jacobi Relaxation implementations}
-        \label{tab:timing}
-    \end{table*}
+   % \begin{table*}[ht]\footnotesize
+        %\centering
+        %\begin{tabular}{ | p{1.3cm} | p{1.5cm} | p{1.5cm} | p{1.6cm} | p{1.6cm} | p{2cm} | p{1.9cm} | p{2cm} | }
+            %\hline
+            %Array Size  & One kernel total time (s) & Two kernel total time (s) & One kernel calc. time (s) & Two kernel calc. time (s) & Improvement on total time (s) & Improvement on calc. time (s) & Improvement in calc. time: 1 kernel over 2 kernel (\%) \\ \hline
+            %130x130 & 0.108135    & 0.106293    & 0.009158    & 0.010240    & 0.98296574  & 1.11814807  & 10.5  \\
+            %146x146 & 0.104811    & 0.106242    & 0.010526    & 0.011699    & 1.01365315  & 1.11143834  & 10    \\
+            %162x162 & 0.131627    & 0.115655    & 0.014078    & 0.015089    & 0.87865711  & 1.07181418  & 6.7   \\
+            %178x178 & 0.115519    & 0.118052    & 0.018908    & 0.020070    & 1.02192713  & 1.06145547  & 5.7   \\
+            %194x194 & 0.119967    & 0.119893    & 0.021031    & 0.022331    & 0.99938316  & 1.06181351  & 5.8   \\
+            %210x210 & 0.125773    & 0.128649    & 0.024906    & 0.026340    & 1.02286659  & 1.05757649  & 5.4   \\
+            %226x226 & 0.128909    & 0.130154    & 0.029529    & 0.030782    & 1.00965798  & 1.04243286  & 4     \\
+            %242x242 & 0.137315    & 0.150276    & 0.034656    & 0.037037    & 1.09438881  & 1.06870383  & 6.4   \\
+            %\hline
+        %\end{tabular}
+        %\caption{Timing results of different Jacobi Relaxation implementations}
+        %\label{tab:timing}
+    %\end{table*}
 
     \subsection{Performance Tuning}
     The performance of the GPU is traditionally obtained at the algorithmic level.
@@ -175,18 +259,47 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
 
     \end{enumerate}
 
-    \begin{table}\footnotesize
-    \centering
-        \begin{tabular}{ | c | c | c | }
-        \hline
-        Matrix Size & Block Size & Time Taken \\
-        \hline
-        1 & 2 & 3 \\
-        \hline
-        \end{tabular}
-        \caption{Inputs and time taken by the GPU}
-        \label{tab:inputs_time_taken}
-    \end{table}
+    \subsection{Shared Memory Allocation}%john
+    In the most advanced version of Michael Wolfe's code and in the versions that we ended up implementing ourselves, specific shared memory is allocated in each block to accommodate the calculations of each thread.
+    Since it is impossible to dynamically allocate memory on the device, we had to allocate enough memory to accommodate the largest number of threads that we would be using.
+    Since the threads were allocated in a 2 dimensional square and the maximum number of threads was 512, we had to allocate enough memory for a 22 by 22 square block.
+    This memory was allocated into the shared memory of each block irrespective of how much of that memory was actually used.
+    It was only necessary to make this change for program versions that allowed for different numbers of threads per block of course.
+
+    As you can see from the occupancy graph this had the effect of increasing the occupancy of the programs allowing for multiple threads.
+    However these programs achieved consistently lower GFLOPS as well as higher GPU calculation times.
+    This illustrates the fact that an increase in occupancy does not automatically lead to an increase in performance.
+    In our case it is affirming out that the bottleneck in our program is not in memory.
+    At any given time there is probably a thread that has already fetched its required memory and is ready to run on the SM.
+
+    \subsection{Comparing Block Sizes}
+    One of the most basic optimizations that can be done is to vary the block size your code runs on.
+    In most cases as the number of threads running on a block increase so does the performance.
+    This is mostly because while GPUs are exceptional at performing many small calculations very quickly, they do not excel at memory access.
+    This is a general rule however.
+    The goal is to maximize the fraction of SM resources that are being used at any given time.
+    One guideline is that as the complexity of the kernel increases the thread count should decrease, but this is not always beneficial.
+
+    As can be seen from the data collected performance is generally increased across all benchmarks as the thread count goes up.
+    This increase has a limit, however.
+    Once the threads begin to exceed 16x16 we begin to see a decrease in performance, as measured by GFLOPs and time taken to by the GPU to complete all its calculations.
+    This is because to achieve maximum performance our programs use tiling, which almost always performs best when 256 (16 x 16) threads are used.
+    This is because in devices of compute capability 1.x global memory is accessed in chunks of half a warp or 16 threads.
+    By using a number of threads that is a multiple of 16 you can maximize the amount of memory read per memory fetch.
+    Since a block requires a square matrix in order to perform the jacobi relaxation algorithm, a 16x16 sized block will minimize the number of clock cycles required to access global memory.
+
+    %\begin{table}\footnotesize
+    %\centering
+        %\begin{tabular}{ | c | c | c | }
+        %\hline
+        %Matrix Size & Block Size & Time Taken \\
+        %\hline
+        %1 & 2 & 3 \\
+        %\hline
+        %\end{tabular}
+        %\caption{Inputs and time taken by the GPU}
+        %\label{tab:inputs_time_taken}
+    %\end{table}
 
     \begin{figure*}
         \centering
@@ -216,16 +329,16 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     Also, the throughput reported by the profiler includes the transfer of data not used by the kernel.
     Here is the table of input and the throughput gained.
 
-    \begin{table}\footnotesize
-    \centering
-        \begin{tabular}{ | c | c | p{1.2cm} | p{1.5cm} | p{1.0cm} | }
-        \hline
-        Matrix Size & Block Size & Kernel GPU Time & Global Mem Overall Throughput & Instruction Throughput \\
-        \hline
-        \end{tabular}
-        \caption{Input and throughput gained}
-        \label{tab:input_throughput}
-    \end{table}
+  %  \begin{table}\footnotesize
+    %\centering
+        %\begin{tabular}{ | c | c | p{1.2cm} | p{1.5cm} | p{1.0cm} | }
+        %\hline
+        %Matrix Size & Block Size & Kernel GPU Time & Global Mem Overall Throughput & Instruction Throughput \\
+        %\hline
+        %\end{tabular}
+        %\caption{Input and throughput gained}
+        %\label{tab:input_throughput}
+    %\end{table}
 
     \subsection{GFLOPS}
     FLOPS are typically the measure of a computer’s performance.
