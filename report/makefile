@@ -3,7 +3,6 @@ OUTLINE=skeleton
 
 skeleton:
 	xelatex -shell-escape ${OUTLINE}.tex
-	#pdflatex -shell-escape ${OUTLINE}.tex
 
 report:
 	pdflatex -shell-escape ${DOCNAME}.tex

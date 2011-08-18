@@ -51,6 +51,7 @@
 \maketitle
 
 \tableofcontents
+\clearpage
 
 \begin{multicols}{2}
   \begin{abstract}
@@ -110,7 +111,7 @@
   \subsection{CPU Specifications}
   TODO: Insert Specs Here
 
-  \section{Analysis}
+  \section{Design}
   \subsection{The Jacobi Relaxation}
   The Jacobi Relaxation is a commonly used iterative method for solving systems of equations.
   It uses the main, upper, and lower diagonals of the matrix.
@@ -171,7 +172,7 @@
   \end{bmatrix*}
   \]
 
-  \section{Design and Results} %prove the idea is good
+  \section{Results} %prove the idea is good
   Only the algorithm and design of to solve this problem have been discussed.
   This section describes the actual implementation and results that were obtained using these optimizations.
   Two types of optimizations were performed: kernel optimizations, and maximizing the throughput according to the array size.
@@ -227,7 +228,7 @@
     \label{fig:time_taken3}
   \end{figurehere}
 
-  \subsection{Performance Tuning}
+  \subsection{Performance Statistics}
   The performance of the GPU is traditionally obtained at the algorithmic level.
   We have measured and simulated the performance by experimenting with various sizes of blocks and matrices.
   Ideally, a larger matrix -size would increase the performance of the GPU because,  it would increase  the  number of computations.
@@ -295,43 +296,6 @@
   Also, the throughput reported by the profiler includes the transfer of data not used by the kernel.
   Here is the table of input and the throughput gained.
 
-  \subsection{GFLOPS}
-  FLOPS are typically the measure of a computer’s performance.
-  This is similar to the number of instructions per second, but we consider only the floating point operations.
-  We have benchmarked the GFLOPS based on the maximum performance that our CUDA device could perform.
-  The Tesla C 1060 can perform ?????.
-  We estimated the effective FLOPS at the algorithmic level and multiplied it by the number of iterations, Block Size, Grid Size and arrived at the total number of FLOPS and hence calculated the GFLOPS.
-  We then compared the gained GFLOPS with the benchmark.
-  Here are the tabulated results.
-
-  \subsection{Occupancy}
-  Executing other warps when one warp is paused is the only way to hide latencies and keep the hardware busy.
-  Occupancy is related to the number of active warps on a multiprocessor and is therefore important in determining how effectively the hardware is kept busy.
-  We used the CUDA occupancy calculator and the Compute Profiler  to calculate the multiprocessor occupancy of a GPU by a given CUDA kernel.
-  Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads().
-  The occupancy is determined by the amount of shared memory and registers used by each thread block.
-
-  \begin{figurehere}
-    \centering
-    \includegraphics[width=8cm]{graphs/a2.pdf}
-    \caption{}
-    \label{fig:gflops1}
-  \end{figurehere}
-
-  \begin{figurehere}
-    \centering
-    \includegraphics[width=8cm]{graphs/b2.pdf}
-    \caption{}
-    \label{fig:gflops2}
-  \end{figurehere}
-
-  \begin{figurehere}
-    \centering
-    \includegraphics[width=8cm]{graphs/c2.pdf}
-    \caption{}
-    \label{fig:gflops3}
-  \end{figurehere}
-
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/g1.pdf}
@@ -359,6 +323,41 @@
     \caption{}
     \label{fig:reduction_mem_throughput}
   \end{figurehere}
+  \subsection{GFLOPS}
+  FLOPS are typically the measure of a computer’s performance.
+  This is similar to the number of instructions per second, but we consider only the floating point operations.
+  We have benchmarked the GFLOPS based on the maximum performance that our CUDA device could perform.
+  The Tesla C 1060 can perform ?????.
+  We estimated the effective FLOPS at the algorithmic level and multiplied it by the number of iterations, Block Size, Grid Size and arrived at the total number of FLOPS and hence calculated the GFLOPS.
+  We then compared the gained GFLOPS with the benchmark.
+  Here are the tabulated results.
+
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/a2.pdf}
+    \caption{}
+    \label{fig:gflops1}
+  \end{figurehere}
+
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/b2.pdf}
+    \caption{}
+    \label{fig:gflops2}
+  \end{figurehere}
+
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/c2.pdf}
+    \caption{}
+    \label{fig:gflops3}
+  \end{figurehere}
+  \subsection{Occupancy}
+  Executing other warps when one warp is paused is the only way to hide latencies and keep the hardware busy.
+  Occupancy is related to the number of active warps on a multiprocessor and is therefore important in determining how effectively the hardware is kept busy.
+  We used the CUDA occupancy calculator and the Compute Profiler  to calculate the multiprocessor occupancy of a GPU by a given CUDA kernel.
+  Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads().
+  The occupancy is determined by the amount of shared memory and registers used by each thread block.
 
   \begin{figurehere}
     \centering
@@ -373,7 +372,6 @@
     \caption{}
     \label{fig:2k_occupancy}
   \end{figurehere}
-
 
   \section{Conclusion} %repeat idea, summarize key results
   We have described our techniques for optimizing the code we received from the presentation given by Michael Wolfe.
