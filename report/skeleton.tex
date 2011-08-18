@@ -30,7 +30,7 @@
 % Title Page
 \title{CUDA Implementation of Jacobi Relaxation}
 \author{Neeraja Budamagunta, Torben Rasmussen, Sweta Sharma, John Wehland, Matthew Wolfe}
-\date{7/20/2011}
+\date{\today}
 
 \makeatletter
 \newenvironment{tablehere}
@@ -56,8 +56,15 @@
 
 \begin{multicols}{2}
 \begin{abstract}
-Abstract text here.
+CUDA is a extension on C++ that allows for massively parallel programming (MPP).
+In this paper we describe how we optimized a program written by Micheal Wolfe that uses a Jacobi Relaxation technique.
+We debugged/cleaned his implementation to allow it to work correctly, then converted it to use only one GPU kernel, going further to allow the user specify what size matrix to use and how many threads to use.
+We then add functionality that allows us to collect performance data.
+Also, we use the profiler to give us performance data as well.
+We tabulate that data that was collected and present this to the reader.
+Finally, we propose areas of future work.
 \end{abstract}
+
 \section{Introduction} %background/context, the idea, summary of results
 The graphics processing unit (GPU) is an application-specific device aimed at rapidly building images for viewing on a display.
 Over the past decade, GPUs have become more and more general purpose, and can now be called general purpose GPUs (GP-GPUs).
@@ -113,12 +120,14 @@ We had limited goals due to shortage of time and resources, so we discuss future
     \]
     The lower and upper diagonal are the diagonals that run parallel to the main diagonal:
     \[
+        A=
         \begin{bmatrix*}
         D & U & x \\
         L & D & U \\
         x & L & D
         \end{bmatrix*}
-        \to
+    \]
+    \[
         L=
         \begin{bmatrix*}
         0 & 0               & 0 \\
@@ -136,25 +145,27 @@ We had limited goals due to shortage of time and resources, so we discuss future
     
     \subsection{System Specifications}
     The device we used to run and benchmark our implementations is an Nvidia Tesla C1060.
+    See table ~\ref{tb:tesla} for more detail.
 
-    \begin{table*} \centering
-    \begin{tabular}{@{}l l@{}}\toprule
-    Spec                            &   Value               \\
-    \hline
-    Compute Capability              &   1.3                 \\
-    Dedicated global memory         &   4294770688 (4GiB)   \\
-    Total Constant Memory           &   65536 (64kiB)       \\
-    Scalar Processors per GPU       &   240                 \\
-    Streaming Multiprocessor \
-    Count                           &   30                  \\
-    Shared memory per MP            &   16384 (16kiB)       \\
-    Registers per MP                &   16384 (16kiB)       \\
-    Threads per warp                &   32                  \\
-    Max threads per block           &   512                 \\
-    Max thread dimensions           &   (512 512 64)        \\
-    Max Grid dimensions             &   (65535 65535 1)     \\
-    \hline
-    \end{tabular}
+    \begin{table*}[!hb]\centering
+        \begin{tabular}{@{}l l@{}}\toprule
+        \bf{Spec}                       &   \bf{Value}          \\
+        \hline
+        Compute Capability              &   1.3                 \\
+        Dedicated global memory         &   4294770688 (4GiB)   \\
+        Total Constant Memory           &   65536 (64kiB)       \\
+        Scalar Processors per GPU       &   240                 \\
+        Streaming Multiprocessor Count  &   30                  \\
+        Shared memory per MP            &   16384 (16kiB)       \\
+        Registers per MP                &   16384 (16kiB)       \\
+        Threads per warp                &   32                  \\
+        Max threads per block           &   512                 \\
+        Max thread dimensions           &   (512 512 64)        \\
+        Max Grid dimensions             &   (65535 65535 1)     \\
+        \hline
+        \end{tabular}
+    \caption{Nvidia Tesla C1060 Specifications}
+    \label{tb:tesla}
     \end{table*}
 
 \section{Our Project}
@@ -426,9 +437,28 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
     \subsection{mention} %other papers we read in class?
 
 \section{Conclusion} %repeat idea, summarize key results
+We have described our techniques for optimizing the code we received from the presentation given by Michael Wolfe.
+We have also shown our methods for collecting data about the performance of the code that was received and our own extension of that code.
+We have found that to optimize code that is not hardware specific is very difficult.
+In some areas our implementation does perform better but in others it does not.
+The results that were obtained does suggest that it would be possible to increase the speed of the calculations farther, although we were not able to implement them further at this time.
 
 \section{Future Work} %list the things you wanted to do but couldn't finish in time for this paper
+There are several areas for future work that are recognized at this time.
+Additional work on implementing the Jacobi Method with one kernel call.
+We believe that better performance can still be achieved using the current method with further effort put into optimization.
+Another area of work would be to implement a way for the user to manually enter the number of threads to be used.
+This would allow for the rapid testing of different number of threads to view the most efficient.
+We would have also like to have added functionality to initialize the array on the GPU.
+Thus, allowing it to be done in parallel, and therefore, done more quickly than the sequential version as it is now.
+Lastly, creating a version that would customize itself to each individual GPU by getting information from the GPU about itself and using this data to adjust the function to better fit the GPU.
+
 \section{Acknowledgements} %mention wolfe et al
+We would like to thank Michael Wolfe for the examples that he provided for us.
+This work was performed on equipment allocated to us from the CUDA lab.
+
+\end{multicols}
+
 \begin{flushleft}
 \begin{thebibliography}{99}
 \topmargin = -100pt
@@ -441,7 +471,6 @@ Two types of optimizations were performed: kernel optimizations, and maximizing 
 
 \clearpage
 
-\end{multicols}
 
 \section{Appendix A: Code}
 
