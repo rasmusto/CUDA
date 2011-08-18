@@ -187,25 +187,48 @@
   \end{bmatrix*}
   \]
 
-  \section{Results} %prove the idea is good
-  Only the algorithm and design of to solve this problem have been discussed.
-  This section describes the actual implementation and results that were obtained using these optimizations.
-  Two types of optimizations were performed: kernel optimizations, and maximizing the throughput according to the array size.
-  \subsection{One Kernel Optimization}
-  The first optimization was to implement a Jacobi relaxation in CUDA with a single kernel.
-  Michael Wolfe implemented a Jacobi relaxation in CUDA using two kernel calls per iteration \cite{michael}.
-  Instead, our design utilized a single kernel call per iteration.
-  This reduces the overhead required to initiate an extra kernel each time.
-  The reason for using two kernels initially was to reduce the change values across the blocks to one single value.
-  These change values were reduced from one change value per thread to a change value per block, in the first kernel 'jacobikernel'.
-  The second kernel, which had fewer numbers of threads and one single block, those values are reduced to one single change value.
-  In our implementation we used the existing threads to do the additional work of further reducing the per block change values to a single value.
-  With this optimization we were able to reduce the calculation time to 10\%.
-  Though we can reduce the overhead of initialization a new kernel and creating new threads, there are other threads that remain idle.
-  This means that we cannot reduce the overhead much further.
-  However this is a possible way of optimization which did give us positive results.
-  In the table below we have shown a few array sizes, their performance with one kernel (our implementation), performance with two kernels \cite{michael} and the performance improvement of one kernel, over two kernel implementation.
+  \subsection{Project Goals}
+  The main aim of our project was to implement an optimized version of Jacobi relaxation in CUDA.
+  We had Dr. Wolfe’s code [reference] as a starting point.
+  After analyzing Dr. Wolfe’s code and having a good understanding of weighted Jacobi algorithm we moved to our next step, optimization.
+  Dr. Wolfe himself has used many optimizations in his code and the code was tuned for array sizes multiples of sixteen plus two.
+  The reason for it being that best performance was achieved for block sizes of 16X16. 
 
+  In our analysis we found two things which we thought to modify.
+  Firstly, Dr. Wolfe’s code had a bug and array sizes bigger than 258 were not converging.
+  Hence we spent a lot of time fixing the bug.
+  Hence we used last two versions of his code and created two subversions of code called original\_jacobi5.cu and original\_jacobi6.cu which were bug free versions with added ability for runtime performance data measurements.
+  Secondly, we found that the code is highly tuned for a particular array size and only works with a bloxk size of 16x16.
+  We wanted to change that to take user specified block size and tried to generalize the program still trying to tune it as much as possible.
+  Thus we wanted to create another code sub version which we called as original\_jacobi6Mod.cu.
+  All of these sub versions fall into the main version which we call as version 1, which is a two kernel version.
+
+  We also planned to implement another version called one kernel version.
+  This again had the same sub versions, only difference being that these use only one kernel call instead of two.
+  The sub versions are called 1k\_jacobi5.cu, 1k\_jacobi6.cu and 1k\_jacobi6Mod.cu similar to the ones above.
+  We discuss our implementation of one kernel version and the modified code with user defined block sizes in the next section.
+  Also we discuss how do all of these six sub versions compare.
+
+  \section{Results} %prove the idea is good
+  In the design section above we have talked about the algorithm and design of our problem.
+  In this section we show the actual implementation and the results we got using these optimizations.
+  We actually worked on two levels of optimizations on [reference], one of those is the one kernel optimizations and the other one is maximizing the throughput according to the array size, using user entered block size values.
+
+  \subsection{One Kernel Optimization}
+  Our first optimization is to implement Jacobi relaxation in CUDA with one kernel.
+  In [reference] Michael has implemented Jacobi relaxation in CUDA using two kernel calls per iteration.
+  Instead as an optimization we use a single kernel call per iteration reducing the over head to initiate an extra kernel each time.
+  The reason for using the second kernel was to reduce the change values across the blocks to one single value.
+  In the first kernel ``jacobikernel'' the change values were reduced from one change value per thread to a change value per block.
+  In the second kernel with fewer numbers of threads and one single block those values are reduced to one single change value.
+  In our implementation we used the existing threads to do the additional work of further reducing the per block change values to a single value.
+
+  With this optimization we were able to reduce the calculation time to a max of 10\% for smaller array sizes.
+  However as the array sizes grew more and more threads were sitting idle and there was less work to do.
+  In other words there were lesser change values to reduce than the number of threads just waiting for a few threads to work with these values.
+  Hence as expected the over head of these waiting threads surmounted the optimization of reducing the overhead of kernel initialization.
+  However this is a possible way of optimization which did give us positive results for smaller array sizes and still has a scope for improvement.
+  
   \subsection{Comparing Block Sizes}
   One of the most basic optimizations that can be done is to vary the block size your code runs on.
   In most cases as the number of threads running on a block increase so does the performance.
