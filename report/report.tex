@@ -421,7 +421,7 @@
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/g3.pdf}
-    \caption{}
+    \caption{Memory throughput of the three inplementations of the Jacobi Kernel}
     \label{fig:jacobi_mem_throughput}
   \end{figurehere}
 
@@ -460,6 +460,18 @@
   Also, higher occupancy does not necessarily mean higher performance.
   If a kernel is not bandwidth bound, then increasing occupancy will not necessarily increase performance.
   If a kernel invocation is already running at one thread block per multiprocessor in the GPU, and it is bottlenecked by computation and not by global memory accesses, then increasing occupancy may have no effect \cite{bib:nvidia}.
+
+  \subsubsection{Speed Up}
+
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/s.pdf}
+    \caption{Speed up versus sequential code}
+    \label{fig:speedup}
+  \end{figurehere}
+  From figure \ref{fig:speedup} we see that the speed up gained over sequential by the original\_j6.cu version, which used the shared, local thread memory for relaxation and array initialization, was 130-140 for matrix sizes between 1000 and 4000.
+
+  Speed up gained for the original\_j5.cu version over the sequential version was relatively lower, about 60-80 for similar matrix sizes.
 
   \section{Conclusion} %repeat idea, summarize key results
   \label{sec:conclusion}
