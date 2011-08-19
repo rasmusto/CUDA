@@ -9,15 +9,15 @@
 \usepackage{verbatim}
 \usepackage{graphicx}
 \usepackage{listings}
-\usepackage{fontspec}
+%\usepackage{fontspec}
 
 \usepackage[hang,small,bf]{caption}
 
 \usepackage{multicol}
 \usepackage{minted}
 
-\setsansfont{Calibri}
-\setmonofont{Consolas}
+%\setsansfont{Calibri}
+%\setmonofont{Consolas}
 
 \usemintedstyle{solarized}
 
@@ -51,7 +51,7 @@
 \maketitle
 
 %\tableofcontents
-\clearpage
+%\clearpage
 
 \begin{multicols}{2}
   \begin{abstract}
@@ -115,7 +115,7 @@
   \end{table*}
 
   \subsection{CPU Specifications}
-  The computer used for this project ``Meakin'', contains an Intel Xeon Processor. More detailed specifications are found in table \ref{tb:cpu}.
+  The computer used for this project ``Meakin'', contains an Intel Xeon Processor. More detailed specifications are found in table \ref{tb:cpu} \cite{bib:xeon}.
   \begin{table*}[!ht]\centering
     \begin{tabular}{@{}l l@{}}\toprule
       \bf{Spec}                     &   \bf{Value}                      \\
@@ -199,7 +199,7 @@
 
   \subsection{Project Goals}
   The main aim of our project was to implement an optimized version of Jacobi relaxation in CUDA.
-  We had Dr. Wolfe’s code \ref{bibwolfe} as a starting point.
+  We had Dr. Wolfe’s code \cite{bib:wolfe} as a starting point.
   After analyzing Dr. Wolfe’s code and having a good understanding of the weighted Jacobi algorithm we moved to our next step, optimization.
   Dr. Wolfe himself has used many optimizations in his code and the code was tuned for array sizes multiples of sixteen plus two.
   %The reason that it had the best performance was that the architecture block sizes of 16x16. 
@@ -226,11 +226,11 @@
   \subsection{Implementation}
   In the design section above, we discussed the algorithm and design of our solution.
   In this section we show the actual implementation and the results obtained using these optimizations.
-  Two attempts to optimize Dr. Wolfe's code \ref{bibwolfe} were performed: a single kernel version and a version where the throughput was changed according to the array size by using user entered block size values.
+  Two attempts to optimize Dr. Wolfe's code \cite{bib:wolfe} were performed: a single kernel version and a version where the throughput was changed according to the array size by using user entered block size values.
 
   \subsubsection{One Kernel Implementation}
   Our first attempt at optimization was to implement Jacobi relaxation in CUDA with one kernel.
-  Dr. Wolfe had implemented Jacobi relaxation in CUDA using two kernel calls per iteration \ref{bibwolfe}.
+  Dr. Wolfe had implemented Jacobi relaxation in CUDA using two kernel calls per iteration \cite{bib:wolfe}.
   Instead, as an optimization, we use a single kernel call per iteration reducing the overhead to initiate an extra kernel each time.
   The reason for using the second kernel was to reduce the change values across the blocks to one single value.
   In the first kernel, ``jacobikernel'', the change values were reduced from one change value per thread to a change value per block.
@@ -281,7 +281,7 @@
   Since a block requires a square matrix in order to perform the Jacobi relaxation algorithm, a 16x16 sized block will give the best performance.
 
   \subsection{Performance Statistics}
-  Performance optimization revolves around the following strategies \ref{bib:nvidia}:
+  Performance optimization revolves around the following strategies \cite{bib:nvidia}:
   \begin{itemize}
     \item Maximize parallel execution to achieve maximum utilization
     \item Optimize memory usage to achieve maximum memory throughput 
@@ -289,7 +289,7 @@
   \end{itemize}
 
   The strategies that yield the best performance gain for a particular portion of an application depends on the performance limiters for that specific portion of the code.
-  Optimizing the instruction usage of a kernel that is mostly limited by memory accesses will not yield any significant performance gains \ref{bib:nvidia}.
+  Optimizing the instruction usage of a kernel that is mostly limited by memory accesses will not yield any significant performance gains \cite{bib:nvidia}.
 
   Although we were not able to optimize our implementation to a great extent focusing on the above factors, we project that recording the statistics associated with the strategies listed above helped us understand the behavior of the kernels.
 
@@ -304,7 +304,7 @@
   This function obtains the current time, expressed as seconds and microseconds since the Epoch, and stores it in the timeval structure pointed to by tv.
   Here is the sample code that we used:
 
-  \ref{bibwolfe}
+  \cite{bib:wolfe}
   \begin{minted}[fontsize=\footnotesize]{c}
     gettimeofday(&tt1, NULL);
     JacobiGPU(a, n, m, .2, .1, .1, .1);
@@ -323,7 +323,7 @@
   CudaEventRecord() records an event and CudaEventElapsedTime() computes the elapsed time between two events (in milliseconds with a resolution of around 0.5 microseconds).
   Here is the sample code that we used before and after the kernel call: 
   
-  \ref{bibwolfe}
+  \cite{bib:wolfe}
   \begin{minted}[fontsize=\footnotesize]{c}
     cudaEventRecord(e2);
     cudaMemcpy(&change, lchange, \
@@ -416,7 +416,7 @@
 
   \paragraph{Global Memory Throughput}
   Global memory throughput is the sum of read and write throughput.
-  Minimizing data transfers between global memory and the device by increasing use of shared memory and caches is one way to optimize throughput \ref{bib:nvidia}.
+  Minimizing data transfers between global memory and the device by increasing use of shared memory and caches is one way to optimize throughput \cite{bib:nvidia}.
 
   \begin{figurehere}
     \centering
@@ -431,7 +431,7 @@
     \caption{}
     \label{fig:reduction_mem_throughput}
   \end{figurehere}
-  As we see from figures \ref{fig_jacobi_mem_throughput} and \ref{figi_reduction_mem_throughput}, the global memory throughput is high for original\_jacobi5.cu and original\_jacobi6.cu.
+  As we see from figures \ref{fig:jacobi_mem_throughput} and \ref{fig:reduction_mem_throughput}, the global memory throughput is high for original\_jacobi5.cu and original\_jacobi6.cu.
   Original\_jacobi5.cu uses the device's global memory, and original\_jacobi6.cu makes use of the shared memory and the local thread memory for the array initialization and relaxation 
   This leads to a significant decrease in the global memory throughput.
 
@@ -440,7 +440,7 @@
   Each multiprocessor on the device has a set of N registers available for use by CUDA program threads.
   These registers are a shared resource that are allocated among the thread blocks executing on a multiprocessor.
   The CUDA compiler attempts to minimize register usage to maximize the number of thread blocks that can be active in the machine simultaneously.
-  Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads() \ref{bib:nvidia}.
+  Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads() \cite{bib:nvidia}.
 
   \begin{figurehere}
     \centering
@@ -459,7 +459,7 @@
   As we see from figures \ref{fig:1k_occupancy} and \ref{fig:2k_occupancy}, the occupancy is 100\% for a block size of 16x16.
   Also, higher occupancy does not necessarily mean higher performance.
   If a kernel is not bandwidth bound, then increasing occupancy will not necessarily increase performance.
-  If a kernel invocation is already running at one thread block per multiprocessor in the GPU, and it is bottlenecked by computation and not by global memory accesses, then increasing occupancy may have no effect \ref{bib:nvidia}.
+  If a kernel invocation is already running at one thread block per multiprocessor in the GPU, and it is bottlenecked by computation and not by global memory accesses, then increasing occupancy may have no effect \cite{bib:nvidia}.
 
   \section{Conclusion} %repeat idea, summarize key results
   \label{sec:conclusion}
@@ -489,10 +489,12 @@
   \begin{thebibliography}{99}
     \bibitem{bib:jacobi_wiki}``Relaxation (iterative Method).''
       Wikipedia, the Free Encyclopedia. Web. 01 Aug. 2011. $<$http://en.wikipedia.org/wiki/Relaxation\_(iterative\_method)$>$.
-    \bibitem{bibwolfe}``Jacobi Relaxation''
+    \bibitem{bib:wolfe}``Jacobi Relaxation'' (unpublished)
       Dr. Michael Wolfe. The Portland Group, Inc. $<$http://www.pgroup.com/$>$
-    %\bibitem{bib:nvidia}``Nvidia CUDA User Guide''
-    %\bibitem{bib:wiki page for XEON}
+    \bibitem{bib:nvidia}``Nvidia CUDA Compute Unified Device Architecture Programming Guide''
+      NVIDIA Corporation. Web. 18 Aug. 2011. $<$http://developer.download.nvidia.com/compute/cuda/2\_0/docs/NVIDIA\_CUDA\_Programming\_Guide\_2.0.pdf$>$
+    \bibitem{bib:xeon_wiki}``Xeon''
+      Wikipedia, the Free Encyclopedia. Web. 18 Aug. 2011. $<$http://en.wikipedia.org/wiki/Xeon$>$
     \bibitem{bib:zhang}``A Quantitative Performance Analysis Model for GPU Architectures''
       Yao Zhang and John D. Owens. Department of Electrical and Computer Engineering. University of Californa, Davis.
   \end{thebibliography}
@@ -504,7 +506,7 @@
 \section{Code}
 \label{sec:code}
 
-%include link to github repository?  http://github.com/rasmusto/CUDA
+%%include link to github repository?  http://github.com/rasmusto/CUDA
 
 \subsection{Sequential Code}
 \inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/seq_jacobi.c}
