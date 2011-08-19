@@ -56,35 +56,41 @@
 \begin{multicols}{2}
   \begin{abstract}
     CUDA is a extension on C++ that allows for massively parallel programming (MPP).
-    In this paper we describe how we optimized a program written by Micheal Wolfe that uses a Jacobi Relaxation technique.
-    We debugged/cleaned his implementation to allow it to work correctly, then converted it to use only one GPU kernel, going further to allow the user specify what size matrix to use and how many threads to use.
-    We then add functionality that allows us to collect performance data.
-    Also, we use the profiler to give us performance data as well.
-    We tabulate that data that was collected and present this to the reader.
-    Finally, we propose areas of future work.
+    This paper describes optimizations made to a Jacobi Relaxation program written by Dr. Wolfe.
+    His implementation was debugged and cleaned to allow for its correct execution
+    It was then converted to use only one GPU kernel, and further modified to allow the user specify what size matrix and how many threads to use.
+    Then, functionality was added that allowed the collection of performance data.
+    Also, the Nvidia CUDA profiler was used to give performance data.
+    That data was tabulated, collected and now presented to the reader.
   \end{abstract}
-
   \section{Introduction} %background/context, the idea, summary of results
+  \label{sec:introduction}
   The graphics processing unit (GPU) is an application-specific device aimed at rapidly building images for viewing on a display.
   Over the past decade, GPUs have become more and more general purpose, and can now be called general purpose GPUs (GP-GPUs).
-  Software frameworks such as CUDA and OpenCL have allowed researchers to tap into the parallelism that exists in these devices.
+  Software frameworks such as CUDA and OpenCL have allowed researchers to tap into this parallelism.
   These frameworks allow the creation of parallel mathematical applications that can be deployed on low-cost, readily available hardware.
   CUDA, or Compute Unified Device Architecture, is Nvidia's parallel computing architecture.
   This architecture gives a programmer access to the underlying hardware through a few layers of abstraction, allowing for relatively high-level programming.
   A GPU can offer a very high computational rate if the algorithm is well-suited for the device.
-  One such application is matrix computation.
-  Matrix applications like the Jacobi relaxation work well in parallel.
-  As such, it is well suited to work with on GP-GPU’s.
+  One such application is the Jacobi relaxation.
+  This method works on a matrix input, which means it is parallelizable.
+  Hence, it is well suited to work with on GP-GPU’s.
 
-  The rest of this report is organized in the following way.
-  The next section talks about our project idea, design and analysis of solution to our problem.
-  Section 3 shows the actual implementations followed by the results achieved.
-  In section 4 we discuss work related to ours and finally conclude in section 5.
-  We had limited goals due to shortage of time and resources, so we discuss future work in section 6.
+  Our implementation of this method is largely based off of the work of Dr. Michael Wolfe.  
+  His version of the Jacobi Relaxation for the CUDA architecture acted as a framework and reference for our design.
+  Our first step was to debug, run and benchmark Dr. Wolfe's code.
+  Dr. Wolfe's code implemented the Jacobi Relaxation and reduction in separate kernels, so one of our optimizations involved combining these into a single kernel.
+  In addition, we modified his two-kernel and our one-kernel implementations to take input matrix sizes that were not multiples of \(16 + 2\), and also to change the block size.
+
+  The rest of this paper is organized in the following way:
+  Section \ref{sec:design} talks about our project goals, design and solution to our problem.
+  Section \ref{sec:results} shows the actual implementations followed by the results achieved.
+  In section \ref{sec:related_work} we discuss work related to ours and finally conclude in section \ref{sec:conclusion}.
+  We had limited goals due to shortage of time and resources, so we discuss future work in \ref{sec:future_work}.
 
   \section{System Specifications}
   \subsection{GPU Specifications}
-  The GPU we used to run and benchmark our implementations is an Nvidia Tesla C1060.
+  The GPU we used to run and benchmark our implementations was an Nvidia Tesla C1060.
   See table~\ref{tb:tesla} for more detail.
 
   \begin{table*}[!ht]\centering
@@ -109,7 +115,7 @@
   \end{table*}
 
   \subsection{CPU Specifications}
-  The computer used for this project ``Meakin'', contains an Intel Xeon Processor. More detailed specifications are found in table~\ref{tb:cpu}.
+  The computer used for this project ``Meakin'', contains an Intel Xeon Processor. More detailed specifications are found in table \ref{tb:cpu}.
   \begin{table*}[!ht]\centering
     \begin{tabular}{@{}l l@{}}\toprule
       \bf{Spec}                     &   \bf{Value}                      \\
@@ -127,11 +133,11 @@
   \end{table*}
 
   \section{Design}
+  \label{sec:design}
   \subsection{The Jacobi Relaxation}
   The Jacobi Relaxation is a commonly used iterative method for solving systems of equations.
   It uses the main, upper, and lower diagonals of the matrix.
-  Able to parallelize the computations on individual elements of the matrix to a large extent.
-  This makes it very worthwhile to implement on CUDA architecture.
+  It is able to parallelize the computations on individual elements of the matrix, which makes it very worthwhile to implement on CUDA architecture.
 
   The general form for a system of linear equations is (in matrix form):
   \[A*u=f\]
@@ -187,48 +193,57 @@
   \end{bmatrix*}
   \]
 
+  In CUDA, the iterations must still run sequentially (because it is a recursive algorithm).
+  Each thread works on a single element of the matrix for a given iteration, in parallel.
+  When all of the threads for a given iteration are complete, the next iteration can be run.
+
   \subsection{Project Goals}
   The main aim of our project was to implement an optimized version of Jacobi relaxation in CUDA.
-  We had Dr. Wolfe’s code [reference] as a starting point.
-  After analyzing Dr. Wolfe’s code and having a good understanding of weighted Jacobi algorithm we moved to our next step, optimization.
+  We had Dr. Wolfe’s code \ref{bib:wolfe} as a starting point.
+  After analyzing Dr. Wolfe’s code and having a good understanding of the weighted Jacobi algorithm we moved to our next step, optimization.
   Dr. Wolfe himself has used many optimizations in his code and the code was tuned for array sizes multiples of sixteen plus two.
-  The reason for it being that best performance was achieved for block sizes of 16X16. 
+  %The reason that it had the best performance was that the architecture block sizes of 16x16. 
 
-  In our analysis we found two things which we thought to modify.
+  In our analysis we found two possible modifications.
   Firstly, Dr. Wolfe’s code had a bug and array sizes bigger than 258 were not converging.
-  Hence we spent a lot of time fixing the bug.
-  Hence we used last two versions of his code and created two subversions of code called original\_jacobi5.cu and original\_jacobi6.cu which were bug free versions with added ability for runtime performance data measurements.
-  Secondly, we found that the code is highly tuned for a particular array size and only works with a bloxk size of 16x16.
-  We wanted to change that to take user specified block size and tried to generalize the program still trying to tune it as much as possible.
-  Thus we wanted to create another code sub version which we called as original\_jacobi6Mod.cu.
-  All of these sub versions fall into the main version which we call as version 1, which is a two kernel version.
+  A relatively long amount of time was spent fixing the bug.
+  We used last two versions of his code to create two sub-versions of code called original\_jacobi5.cu and original\_jacobi6.cu 
+  These were bug-free versions with the added ability for runtime performance data measurements.
 
-  We also planned to implement another version called one kernel version.
-  This again had the same sub versions, only difference being that these use only one kernel call instead of two.
-  The sub versions are called 1k\_jacobi5.cu, 1k\_jacobi6.cu and 1k\_jacobi6Mod.cu similar to the ones above.
-  We discuss our implementation of one kernel version and the modified code with user defined block sizes in the next section.
-  Also we discuss how do all of these six sub versions compare.
+  Secondly, we found that the code is highly tuned for a particular array size and only works with a block size of 16x16.
+  We wanted to change that to take user specified block size, allowing for a more generic, but still optimized program.
+  Hence, we created another code sub-version which we called as original\_jacobi6Mod.cu.
+  All of these sub-versions fall into the main version which we call as version 1, which is a two kernel version.
 
-  \section{Implementation}
-  \subsection{Results} %prove the idea is good
-  In the design section above we have talked about the algorithm and design of our problem.
-  In this section we show the actual implementation and the results we got using these optimizations.
-  We actually worked on two levels of optimizations on [reference], one of those is the one kernel optimizations and the other one is maximizing the throughput according to the array size, using user entered block size values.
+  We also implemented another version with a single kernel.
+  This again had the same sub versions, the only difference being that these use only one kernel call instead of two.
+  The sub versions are called 1k\_jacobi5.cu, 1k\_jacobi6.cu and 1k\_jacobi6Mod.cu, similar to the ones above.
+  We discuss our implementation of the one kernel version and the modified code with user defined block sizes in the next section.
+  Also we discuss how the performance of all of these six sub-versions compare.
 
-  \subsubsection{One Kernel Optimization}
-  Our first optimization is to implement Jacobi relaxation in CUDA with one kernel.
-  In [reference] Michael has implemented Jacobi relaxation in CUDA using two kernel calls per iteration.
-  Instead as an optimization we use a single kernel call per iteration reducing the over head to initiate an extra kernel each time.
+  \section{Results}
+  \label{sec:results}
+  \subsection{Implementation}
+  In the design section above, we discussed the algorithm and design of our solution.
+  In this section we show the actual implementation and the results obtained using these optimizations.
+
+  %FIX
+  %Two attempts to optimizes Dr. Wolfe's code \ref{bib:wolfe} were performed, one being the single kernel version and the other being the
+  % other one is maximizing the throughput according to the array size, using user entered block size values.
+
+  \subsubsection{One Kernel Implementation}
+  Our first attempt at optimization was to implement Jacobi relaxation in CUDA with one kernel.
+  Dr. Wolfe had implemented Jacobi relaxation in CUDA using two kernel calls per iteration \ref{bib:wolfe}.
+  Instead, as an optimization, we use a single kernel call per iteration reducing the overhead to initiate an extra kernel each time.
   The reason for using the second kernel was to reduce the change values across the blocks to one single value.
-  In the first kernel ``jacobikernel'' the change values were reduced from one change value per thread to a change value per block.
-  In the second kernel with fewer numbers of threads and one single block those values are reduced to one single change value.
+  In the first kernel, ``jacobikernel'', the change values were reduced from one change value per thread to a change value per block.
+  In the second kernel, which had fewer threads and one single block, those values are reduced to one single change value.
   In our implementation we used the existing threads to do the additional work of further reducing the per block change values to a single value.
 
   With this optimization we were able to reduce the calculation time to a max of 10\% for smaller array sizes.
-  However as the array sizes grew more and more threads were sitting idle and there was less work to do.
-  In other words there were lesser change values to reduce than the number of threads just waiting for a few threads to work with these values.
-  Hence as expected the over head of these waiting threads surmounted the optimization of reducing the overhead of kernel initialization.
-  However this is a possible way of optimization which did give us positive results for smaller array sizes and still has a scope for improvement.
+  However as the array sizes grew, an increasing number threads were idle as they were waiting for the other threads to perform the reduction.
+   Performance gains through merging the kernels were trivial compared to the time lost waiting for these threads to complete.
+  However, this is a possible optimization that did give us positive results for smaller array sizes and still has some potential.
   
   \subsubsection{Implementation with varying block sizes}
   In the version of Dr Wolfe's code which used the shared memory and array allocation in local memory, the versions that we implemented ourselves, specific shared memory is allocated in each block to accommodate the “change” value obtained over the relaxation.
@@ -330,7 +345,7 @@
 
 
   \subsubsection{Shared Memory Allocation}%john
-  In the most advanced version of Michael Wolfe's code and in the versions that we ended up implementing ourselves, specific shared memory is allocated in each block to accommodate the calculations of each thread.
+  In the most advanced version of Dr. Wolfe's code and in the versions that we ended up implementing ourselves, specific shared memory is allocated in each block to accommodate the calculations of each thread.
   Since it is impossible to dynamically allocate memory on the device, we had to allocate enough memory to accommodate the largest number of threads that we would be using.
   Since the threads were allocated in a 2 dimensional square and the maximum number of threads was 512, we had to allocate enough memory for a 22 by 22 square block.
   This memory was allocated into the shared memory of each block irrespective of how much of that memory was actually used.
@@ -432,13 +447,15 @@
   If a kernel invocation is already running at least one thread block per multiprocessor in the GPU, and it is bottlenecked by computation and not by global memory accesses, then increasing occupancy may have no effect. 
 
   \section{Conclusion} %repeat idea, summarize key results
-  We have described our techniques for optimizing the code we received from the presentation given by Michael Wolfe.
+  \label{sec:conclusion}
+  We have described our techniques for optimizing the code we received from the presentation given by Dr. Wolfe.
   We have also shown our methods for collecting data about the performance of the code that was received and our own extension of that code.
   We have found that to optimize code that is not hardware specific is very difficult.
   In some areas our implementation does perform better but in others it does not.
   The results that were obtained does suggest that it would be possible to increase the speed of the calculations farther, although we were not able to implement them further at this time.
 
   \section{Future Work} %list the things you wanted to do but couldn't finish in time for this paper
+  \label{sec:future_work}
   There are several areas for future work that are recognized at this time.
   Additional work on implementing the Jacobi Method with one kernel call.
   We believe that better performance can still be achieved using the current method with further effort put into optimization.
@@ -449,7 +466,8 @@
   Lastly, creating a version that would customize itself to each individual GPU by getting information from the GPU about itself and using this data to adjust the function to better fit the GPU.
 
   \section{Acknowledgements} %mention wolfe et al
-  We would like to thank Michael Wolfe for the examples that he provided for us.
+  \label{sec:acknowledgements}
+  We would like to thank Dr. Wolfe for the examples that he provided for us.
   This work was performed on equipment allocated to us from the CUDA lab.
 
 \end{multicols}
@@ -457,10 +475,10 @@
 \begin{flushleft}
   \begin{thebibliography}{99}
       \topmargin = -100pt
-    \bibitem{wiki}``Relaxation (iterative Method).''
+    \bibitem{bib:jacobi_wiki}``Relaxation (iterative Method).''
       Wikipedia, the Free Encyclopedia. Web. 01 Aug. 2011. $<$http://en.wikipedia.org/wiki/Relaxation\_(iterative\_method)$>$.
-    \bibitem{michael}``Jacobi Relaxation''
-      Michael Wolfe. The Portland Group, Inc. $<$http://www.pgroup.com/$>$
+    \bibitem{bib:wolfe}``Jacobi Relaxation''
+      Dr. Michael Wolfe. The Portland Group, Inc. $<$http://www.pgroup.com/$>$
   \end{thebibliography}
 \end{flushleft}
 
@@ -468,11 +486,14 @@
 
 \appendix
 \section{Code}
+\label{sec:code}
+
+%include link to github repository?  http://github.com/rasmusto/CUDA
 
 \subsection{Sequential Code}
 \inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/seq_jacobi.c}
 
-\subsection{Michael Wolfe's Code}
+\subsection{Dr. Wolfe's Code}
 \inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi5.cu}
 \inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi6.cu}
 
