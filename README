@@ -1,49 +1,53 @@
 This is the README file for the Summer 2011 CUDA group in Dr. Karavanic's CS410/510 GPGPU computing class at Portland State University
 
+**************** CODE ***************
 The final code is housed in the "jacobi_final" subdirectory.
-
 There are 7 source files of interest:
 
-1) seq_jacobi.c - sequential version for speed-up comparison
-    
-2) original_jacobi5.cu  - bug-fixed version of Dr. Wolfe's j5 kernel
-3) original_jacobi6.cu  - bug-fixed version of Dr. Wolfe's j6 kernel
+    1) seq_jacobi.c - sequential version for speed-up comparison
+        
+    2) original_jacobi5.cu  - bug-fixed version of Dr. Wolfe's j5 kernel
+    3) original_jacobi6.cu  - bug-fixed version of Dr. Wolfe's j6 kernel
 
-4) 1k_jacobi5.cu        - one kernel version of Dr. Wolfe's j5 kernel
-5) 1k_jacobi6.cu        - one kernel version of Dr. Wolfe's j6 kernel
+    4) 1k_jacobi5.cu        - one kernel version of Dr. Wolfe's j5 kernel
+    5) 1k_jacobi6.cu        - one kernel version of Dr. Wolfe's j6 kernel
 
-6) orig_J6M_v2.cu       - modified version of j6 kernel that allows specifying the block size
-7) 1k_J6M_v2.cu         - one kernel version of j6 kernel that allows specifying the block size
+    6) orig_J6M_v2.cu       - modified version of j6 kernel that allows specifying the block size
+    7) 1k_J6M_v2.cu         - one kernel version of j6 kernel that allows specifying the block size
 
 These files can be built by running 'make' from the jacobi_final directory.
-
 The output files will be called :
 
-1) seq_jacobi.o 
-  
-2) original_jacobi5.o
-3) original_jacobi6.o
+    1) seq_jacobi.o 
+      
+    2) original_jacobi5.o
+    3) original_jacobi6.o
 
-4) 1k_jacobi5.o
-5) 1k_jacobi6.o
+    4) 1k_jacobi5.o
+    5) 1k_jacobi6.o
 
-6) orig_jacobi6Mod.o
-7) 1k_jacobi6Mod.o
+    6) orig_jacobi6Mod.o
+    7) 1k_jacobi6Mod.o
 
 These programs can be run manually by executing the command:
 
-./<filename>.o/ <m_size> <n_size>
+    ./<filename>.o/ <m_size> <n_size>
 
 Where m_size and n_size are the dimensions of the input matrix (square matrices where each side is a multiple of 16 + 2 work best).
 
 The modified versions of the code (orig_jacobi6Mod, 1k_jacobi6Mod) take an additional parameter of the blocksize.
 They can be run like this:
 
-./<filename>.o/ <m_size> <n_size> <t_count>
+    ./<filename>.o/ <m_size> <n_size> <t_count>
 
 Where t_count is the number of threads.
-
 The m_size and n_size should be a multiple of t_count + 2 for best performance.
+*************************************
+
+**************** DATA ***************
+Collected data used for plots is contained within the report/data directory, as well as stored within the python scripts used to generate the graphs.
+The output graphs (in pdf format) are stored in the report/graphs direcotry.
+*************************************
 
 
 
