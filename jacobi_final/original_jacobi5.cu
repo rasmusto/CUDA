@@ -125,8 +125,7 @@ void JacobiGPU( float* a, int n, int m, float w0, float w1, float w2, float tol 
     printf( "Size(Number of Operations) = %.0f Ops/sec \n", dNumOps );
 
     printf( "Throughtput = %.4f GFlops/sec \n",gflops );
-    printf( "JacobiGPU  converged in %d iterations to residual %f\n", iters, change );
-    printf( "JacobiGPU  used %f seconds total\n", sumtime/1000.0f );
+    
     cudaMemcpy( a, dnewa, memsize, cudaMemcpyDeviceToHost );
     cudaFree( da );
     cudaFree( dnewa );
