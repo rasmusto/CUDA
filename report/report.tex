@@ -50,7 +50,7 @@
 
 \maketitle
 
-\tableofcontents
+%\tableofcontents
 \clearpage
 
 \begin{multicols}{2}
@@ -339,7 +339,7 @@
     \label{fig:all_time}
   \end{figurehere}
 
-  As you see in figure \ref{fig:all_time}, the original_jacobi5.cu and 1k_jacobi5.cu versions took the longest time and the original_jacobi6.cu 1k_jacobi6.cu versions, which used the shared memory and the local thread memory for allocating the matrix and calculating the change, took the least amount of time.
+  As you see in figure \ref{fig:all_time}, the original\_jacobi5.cu and 1k\_jacobi5.cu versions took the longest time and the original\_jacobi6.cu 1k\_jacobi6.cu versions, which used the shared memory and the local thread memory for allocating the matrix and calculating the change, took the least amount of time.
 
   \subsubsection{Shared Memory Allocation}%john
   In the most advanced version of Dr. Wolfe's code and in the versions that we ended up implementing, specific shared memory is allocated in each block to accommodate the calculations of each thread.
@@ -363,7 +363,7 @@
   \end{enumerate}
   We ended doing it manually, and confirmed this value by looking at the PTX file.
   Figure \ref{fig:gflops1} shows the GFLOPS obtained by all versions of the code for a block size of 16x16.
-  The original_jacobi6.cu version performed the best at large matrix sizes.
+  The original\_jacobi6.cu version performed the best at large matrix sizes.
 
   \begin{figurehere}
     \centering
@@ -493,7 +493,8 @@
       Dr. Michael Wolfe. The Portland Group, Inc. $<$http://www.pgroup.com/$>$
     %\bibitem{bib:nvidia}``Nvidia CUDA User Guide''
     %\bibitem{bib:wiki page for XEON}
-    %\bibitem{papers in class}%at least the microbenchmarks one
+    \bibitem{bib:zhang}``A Quantitative Performance Analysis Model for GPU Architectures''
+      Yao Zhang and John D. Owens. Department of Electrical and Computer Engineering. University of Californa, Davis.
   \end{thebibliography}
 \end{flushleft}
 
