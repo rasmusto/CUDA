@@ -57,7 +57,7 @@
   \begin{abstract}
     CUDA is a extension on C++ that allows for massively parallel programming (MPP).
     This paper describes optimizations made to a Jacobi Relaxation program written by Dr. Wolfe.
-    His implementation was debugged and cleaned to allow for its correct execution
+    His implementation was debugged and cleaned to allow for its correct execution.
     It was then converted to use only one GPU kernel, and further modified to allow the user specify what size matrix and how many threads to use.
     Then, functionality was added that allowed the collection of performance data.
     Also, the Nvidia CUDA profiler was used to give performance data.
@@ -76,7 +76,7 @@
   This method works on a matrix input, which means it is parallelizable.
   Hence, it is well suited to work with on GP-GPU’s.
 
-  Our implementation of this method is largely based off of the work of Dr. Michael Wolfe.  
+  Our implementation of this method is largely based off of the work of Dr. Michael Wolfe.
   His version of the Jacobi Relaxation for the CUDA architecture acted as a framework and reference for our design.
   Our first step was to debug, run and benchmark Dr. Wolfe's code.
   Dr. Wolfe's code implemented the Jacobi Relaxation and reduction in separate kernels, so one of our optimizations involved combining these into a single kernel.
@@ -294,7 +294,7 @@
   Although we were not able to optimize our implementation to a great extent focusing on the above factors, we project that recording the statistics associated with the strategies listed above helped us understand the behavior of the kernels.
 
   We measured the time taken by the GPU kernel and the overall time taken by the program.
-  Also, we measured factors like GFLOPS, memory/instruction throughput, and speed up, that would project the performance. 
+  Also, we measured factors like GFLOPS, memory/instruction throughput, and speed up, that would project the performance.
 
   \subsubsection{Timing}
 
