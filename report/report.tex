@@ -85,7 +85,7 @@
   The rest of this paper is organized in the following way:
   Section \ref{sec:design} talks about our project goals, design and solution to our problem.
   Section \ref{sec:results} shows the actual implementations followed by the results achieved.
-  In section \ref{sec:related_work} we discuss work related to ours and finally conclude in section \ref{sec:conclusion}.
+  We conclude in section \ref{sec:conclusion}.
   We had limited goals due to shortage of time and resources, so we discuss future work in \ref{sec:future_work}.
 
   \section{System Specifications}
@@ -199,7 +199,7 @@
 
   \subsection{Project Goals}
   The main aim of our project was to implement an optimized version of Jacobi relaxation in CUDA.
-  We had Dr. Wolfe’s code \ref{bib:wolfe} as a starting point.
+  We had Dr. Wolfe’s code \ref{bibwolfe} as a starting point.
   After analyzing Dr. Wolfe’s code and having a good understanding of the weighted Jacobi algorithm we moved to our next step, optimization.
   Dr. Wolfe himself has used many optimizations in his code and the code was tuned for array sizes multiples of sixteen plus two.
   %The reason that it had the best performance was that the architecture block sizes of 16x16. 
@@ -226,14 +226,11 @@
   \subsection{Implementation}
   In the design section above, we discussed the algorithm and design of our solution.
   In this section we show the actual implementation and the results obtained using these optimizations.
-
-  %FIX
-  %Two attempts to optimizes Dr. Wolfe's code \ref{bib:wolfe} were performed, one being the single kernel version and the other being the
-  % other one is maximizing the throughput according to the array size, using user entered block size values.
+  Two attempts to optimize Dr. Wolfe's code \ref{bibwolfe} were performed: a single kernel version and a version where the throughput was changed according to the array size by using user entered block size values.
 
   \subsubsection{One Kernel Implementation}
   Our first attempt at optimization was to implement Jacobi relaxation in CUDA with one kernel.
-  Dr. Wolfe had implemented Jacobi relaxation in CUDA using two kernel calls per iteration \ref{bib:wolfe}.
+  Dr. Wolfe had implemented Jacobi relaxation in CUDA using two kernel calls per iteration \ref{bibwolfe}.
   Instead, as an optimization, we use a single kernel call per iteration reducing the overhead to initiate an extra kernel each time.
   The reason for using the second kernel was to reduce the change values across the blocks to one single value.
   In the first kernel, ``jacobikernel'', the change values were reduced from one change value per thread to a change value per block.
@@ -246,8 +243,8 @@
   However, this is a possible optimization that did give us positive results for smaller array sizes and still has some potential.
   
   \subsubsection{Implementation with varying block sizes}
-  In the version of Dr Wolfe's code which used the shared memory and array allocation in local memory, the versions that we implemented ourselves, specific shared memory is allocated in each block to accommodate the “change” value obtained over the relaxation.
-  Since it is impossible to dynamically allocate memory on the device, we had to allocate enough memory to accommodate the largest number of threads that we would be using.
+  In the version of Dr Wolfe's code that used the shared memory and array allocation in local memory (original\_jacobi6.cu), the versions that we implemented (1k\_jacobi6.cu), specific shared memory is allocated in each block to accommodate the ``change'' value obtained in the relaxation.
+  It is impossible to dynamically allocate memory on the device, so we had to allocate enough memory to accommodate the largest possible number of threads.
   Since the threads were allocated in a 2 dimensional square and the maximum number of threads was 512, we allocated enough memory for a 22 by 22 square block.
 
   Here are some results captured for varying block sizes:
@@ -268,46 +265,46 @@
   \end{figurehere}
 
   As we see in figures \ref{fig:2kmod_time} and \ref{fig:1kmod_time}, a block size of 10x10 took the most time to converge.
-  Also, block sizes of 14x14 and 20x20 performed a little lower than the block size of 16x16.
-  However, from the above implementation, we could see that the block size of 16x16 worked the best.
+  Also, block sizes of 14x14 and 20x20 performed more slowly than 16x16.
+  From the above implementation, we could see that the block size of 16x16 worked the best.
   This is mostly because, while GPUs are exceptional at performing many small calculations very quickly, they do not excel at memory access.
-  This is a general rule however.
-  The goal is to maximize the fraction of SM resources that are being used at any given time.
-  One guideline is that as the complexity of the kernel increases the thread count should decrease, but this is not always beneficial.
+  This is a general rule, however.
+  The goal is to maximize the fraction of streaming multiprocessor (SM) resources that are being used at any given time.
+  One guideline is that as the complexity of the kernel increases, the thread count should decrease, but this is not always beneficial.
 
-  As can be seen from the data collected performance is generally increased across all benchmarks as the thread count goes up.
-  This increase has a limit, however.
+  As can be seen from the data collected, performance generally increases across all benchmarks as the thread count goes up.
+  However, this increase has a limit.
   Once the threads begin to exceed 16x16 we begin to see a decrease in performance.
-  This is because, we use tiling to achieve maximum performance out of the program, which almost always performs best when 256 (16 x 16) threads are used.
-  This is because in devices of compute capability 1.x global memory is accessed in chunks of half a warp or 16 threads.
+  This is because we use tiling to achieve maximum performance out of the program, which almost always performs best when 256 (16 x 16) threads are used.
+  In devices of compute capability 1.x, global memory is accessed in chunks of half a warp, or 16 threads.
   By using a number of threads that is a multiple of 16 you can maximize the amount of memory read per memory fetch.
-  Since a block requires a square matrix in order to perform the jacobi relaxation algorithm, a 16x16 sized block will the best of its performance.
+  Since a block requires a square matrix in order to perform the Jacobi relaxation algorithm, a 16x16 sized block will give the best performance.
 
   \subsection{Performance Statistics}
-  Performance optimization revolves around the following strategies: 
+  Performance optimization revolves around the following strategies \ref{bib:nvidia}:
   \begin{itemize}
     \item Maximize parallel execution to achieve maximum utilization
     \item Optimize memory usage to achieve maximum memory throughput 
     \item Optimize instruction usage to achieve maximum instruction throughput 
   \end{itemize}
 
-  The strategies that yield the best performance gain for a particular portion of an application depends on the performance limiters for that portion.
-  Optimizing instruction usage of a kernel that is mostly limited by memory accesses will not yield any significant performance gain. 
+  The strategies that yield the best performance gain for a particular portion of an application depends on the performance limiters for that specific portion of the code.
+  Optimizing the instruction usage of a kernel that is mostly limited by memory accesses will not yield any significant performance gains \ref{bib:nvidia}.
 
-  Although we were not able to optimize our implementation to a great extent focusing on the above factors, we thought we would project the above factors that our implementation was yielding.
+  Although we were not able to optimize our implementation to a great extent focusing on the above factors, we project that recording the statistics associated with the strategies listed above helped us understand the behavior of the kernels.
 
   We measured the time taken by the GPU kernel and the overall time taken by the program.
-  Also, we did measure factors like GFLOPS, throughput, speed up etc., that would project the performance. 
+  Also, we measured factors like GFLOPS, memory/instruction throughput, and speed up, that would project the performance. 
 
   \subsubsection{Timing}
 
-  We measured the time taken by the GPU using Direct Measurement and the Cuda Profiler.
-  In Direct measurement, we have measured the time elapsed through direct measurement using two methods: gettimeofday and Cuda Events.
+  We directly measured the elapsed time using two methods: the built-in gettimeofday() function and CUDA Events.
 
   \paragraph{gettimeofday()}
-  This function obtains the current time, expressed as seconds and microseconds since the Epoch, and store it in the timeval structure pointed to by tv.
+  This function obtains the current time, expressed as seconds and microseconds since the Epoch, and stores it in the timeval structure pointed to by tv.
   Here is the sample code that we used:
 
+  \ref{bibwolfe}
   \begin{minted}[fontsize=\footnotesize]{c}
     gettimeofday(&tt1, NULL);
     JacobiGPU(a, n, m, .2, .1, .1, .1);
@@ -322,10 +319,11 @@
 
   \paragraph{CUDA Events}
   This API provides calls that create and destroy events, record events (via timestamp), and convert timestamp differences into a floating-point value in milliseconds.
-  We have used the cudaEventRecord and the cudaEventElapsedTime to  measure the time taken by the GPU.
-  The cudaEventRecord records an event and the cudaEventElapsedTime  computes the elapsed time between two events (in milliseconds with a resolution of around 0.5 microseconds).
-  Here is the sample code that we used before and after the kernel call. 
-
+  We used cudaEventRecord() and cudaEventElapsedTime() to measure the time taken by the GPU.
+  CudaEventRecord() records an event and CudaEventElapsedTime() computes the elapsed time between two events (in milliseconds with a resolution of around 0.5 microseconds).
+  Here is the sample code that we used before and after the kernel call: 
+  
+  \ref{bibwolfe}
   \begin{minted}[fontsize=\footnotesize]{c}
     cudaEventRecord(e2);
     cudaMemcpy(&change, lchange, \
@@ -341,71 +339,84 @@
     \label{fig:all_time}
   \end{figurehere}
 
-  As you see in figure \ref{fig:all_time}, the J5 versions took the longest time and the J6 versions which used the shared memory and the local thread memory for allocating the matrix and calculating the change took lesser time.
-
+  As you see in figure \ref{fig:all_time}, the original_jacobi5.cu and 1k_jacobi5.cu versions took the longest time and the original_jacobi6.cu 1k_jacobi6.cu versions, which used the shared memory and the local thread memory for allocating the matrix and calculating the change, took the least amount of time.
 
   \subsubsection{Shared Memory Allocation}%john
-  In the most advanced version of Dr. Wolfe's code and in the versions that we ended up implementing ourselves, specific shared memory is allocated in each block to accommodate the calculations of each thread.
-  Since it is impossible to dynamically allocate memory on the device, we had to allocate enough memory to accommodate the largest number of threads that we would be using.
+  In the most advanced version of Dr. Wolfe's code and in the versions that we ended up implementing, specific shared memory is allocated in each block to accommodate the calculations of each thread.
+  Since it is impossible to dynamically allocate memory on the device, we had to allocate enough memory to accommodate the largest possible number of threads.
   Since the threads were allocated in a 2 dimensional square and the maximum number of threads was 512, we had to allocate enough memory for a 22 by 22 square block.
-  This memory was allocated into the shared memory of each block irrespective of how much of that memory was actually used.
-  It was only necessary to make this change for program versions that allowed for different numbers of threads per block of course.
+  This memory was allocated into the shared memory of each block regardless of how much of that memory was actually used.
+  It was only necessary to make this change for program versions that allowed for different numbers of threads per block, of course.
 
-  As you can see from the occupancy graph this had the effect of increasing the occupancy of the programs allowing for multiple threads.
-  However these programs achieved consistently lower GFLOPS as well as higher GPU calculation times.
+  As you can see from the occupancy graph, this had the effect of increasing the occupancy of the programs, allowing for multiple threads.
+  However, these programs achieved consistently lower GFLOPS as well as higher GPU calculation times.
   This illustrates the fact that an increase in occupancy does not automatically lead to an increase in performance.
-  In our case it is affirming out that the bottleneck in our program is not in memory.
+  In our case this is confirmation that the bottleneck in our program is not in memory.
   At any given time there is probably a thread that has already fetched its required memory and is ready to run on the SM.
 
   \subsubsection{GFLOPS}
-  This is one of the measures of a computers performance and are nothing but Floating point operations and a flop count is a count of these operations.
-  The FLOPS were calculated two different ways. 
+  This is one of the measures of a computer's performance is nothing but floating point operations per second.
+  The FLOPS can be calculated in two different ways:
   \begin{enumerate}
-    \item Counting the number of operations manually by a code walk through
+    \item Counting the number of operations in the code manually
     \item Counting using the PTX file
   \end{enumerate}
+  We ended doing it manually, and confirmed this value by looking at the PTX file.
+  Figure \ref{fig:gflops1} shows the GFLOPS obtained by all versions of the code for a block size of 16x16.
+  The original_jacobi6.cu version performed the best at large matrix sizes.
+
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/a2.pdf}
-    \caption{}
+    \caption{GFLOPS measurement for all versions of code for block size 16x16}
     \label{fig:gflops1}
   \end{figurehere}
+
+  Figure \ref{fig:gflops2} shows the GFLOPS performance of the two kernel implementation for various block sizes: 10x10, 14x14, 16x16, and 20x20.
+  As has been stated, the 16x16 version performs the best.
+
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/b2.pdf}
-    \caption{}
+    \caption{GFLOPS measurement with different block sizes for two kernel implementation}
     \label{fig:gflops2}
   \end{figurehere}
+
+  \ref{fig:gflops3} shows the GFLOPS performance of the one kernel implementation for various block sizes: 10x10, 14x14, 16x16, and 20x20.
+
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/c2.pdf}
-    \caption{}
+    \caption{GFLOPS measurement with different block sizes for one kernel implementation}
     \label{fig:gflops3}
   \end{figurehere}
+
   \subsubsection{Throughput}
-  We captured the Instruction throughput and the Global Memory overall throughput given by the Profiler.
+  We captured the instruction throughput and the global memory throughput given by the CUDA Profiler.
 
   \paragraph{Instruction Throughput}
-  Instruction throughput is the ratio of achieved instruction rate Vs Peak Single-Issue Instruction Rate.
+  Instruction throughput is the ratio of achieved instruction rate versus peak single-issue instruction rate.
 
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/g1.pdf}
-    \caption{}
+    \caption{Instruction throughput of the three implementations of the Jacobi kernel}
     \label{fig:jacobi_instr_throughput}
   \end{figurehere}
+
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/g2.pdf}
-    \caption{}
+    \caption{Instruction throughput of the two implementations of the reduction kernel}
     \label{fig:reduction_instr_throughput}
   \end{figurehere}
-  As we see from figure \ref{fig:jacobi_instr_throughput}, the one kernel version gives a better instruction throughput for smaller matrix sizes and is dominated by the two kernel version as the matrix size increases.
-  Also, the throughput for the reduction kernel has a significant fall which is because, there are more and more number of threads staying idle. 
+
+  As we see from figures \ref{fig:jacobi_instr_throughput} and \ref{fig:reduction_instr_throughput}, the one kernel version gives a better instruction throughput for smaller matrix sizes and is dominated by the two kernel version as the matrix size increases.
+  Also, the throughput for the reduction kernel decreases as the  matrix size increases because there are an increasing number of threads staying idle. 
 
   \paragraph{Global Memory Throughput}
-  Global Memory Over All throughput is the sum of read and write throughput.
-  Minimizing data transfers between global memory and the device by maximizing use of shared memory and caches is one key that we want to look at while optimizing this factor.
+  Global memory throughput is the sum of read and write throughput.
+  Minimizing data transfers between global memory and the device by increasing use of shared memory and caches is one way to optimize throughput \ref{bib:nvidia}.
 
   \begin{figurehere}
     \centering
@@ -413,72 +424,76 @@
     \caption{}
     \label{fig:jacobi_mem_throughput}
   \end{figurehere}
+
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/g4.pdf}
     \caption{}
     \label{fig:reduction_mem_throughput}
   \end{figurehere}
-  As we see from the above figure, the global memory throughput is high for the J5 version which uses the device’s global memory and the J6 version which makes use of the shared memory and the local thread memory for the array initialization and relaxation has a significant decrease in the global memory throughput.
+  As we see from figures \ref{fig_jacobi_mem_throughput} and \ref{figi_reduction_mem_throughput}, the global memory throughput is high for original\_jacobi5.cu and original\_jacobi6.cu.
+  Original\_jacobi5.cu uses the device's global memory, and original\_jacobi6.cu makes use of the shared memory and the local thread memory for the array initialization and relaxation 
+  This leads to a significant decrease in the global memory throughput.
+
   \subsubsection{Occupancy}
   Occupancy is the ratio of active warps to the maximum number of warps supported on a multiprocessor of the GPU.
   Each multiprocessor on the device has a set of N registers available for use by CUDA program threads.
-  These registers are a  shared resource that are allocated among the thread blocks executing on a multiprocessor.
+  These registers are a shared resource that are allocated among the thread blocks executing on a multiprocessor.
   The CUDA compiler attempts to minimize register usage to maximize the number of thread blocks that can be active in the machine simultaneously.
-  Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads(). 
+  Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads() \ref{bib:nvidia}.
 
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/o1.pdf}
-    \caption{}
+    \caption{Occupancy for the modified one kernel implementation for block sizes 10x10, 14x14, 16x16, and 20x20}
     \label{fig:1k_occupancy}
   \end{figurehere}
 
   \begin{figurehere}
     \centering
     \includegraphics[width=8cm]{graphs/o2.pdf}
-    \caption{}
+    \caption{Occupancy for the modified two kernel implementation for block sizes 10x10, 14x14, 16x16, and 20x20}
     \label{fig:2k_occupancy}
   \end{figurehere}
 
-  As we see from figures \ref{fig:1k_occupancy} and \ref{fig:2k_occupancy}, the occupancy is 100\% for a block size of 16.
+  As we see from figures \ref{fig:1k_occupancy} and \ref{fig:2k_occupancy}, the occupancy is 100\% for a block size of 16x16.
   Also, higher occupancy does not necessarily mean higher performance.
   If a kernel is not bandwidth bound, then increasing occupancy will not necessarily increase performance.
-  If a kernel invocation is already running at least one thread block per multiprocessor in the GPU, and it is bottlenecked by computation and not by global memory accesses, then increasing occupancy may have no effect. 
+  If a kernel invocation is already running at one thread block per multiprocessor in the GPU, and it is bottlenecked by computation and not by global memory accesses, then increasing occupancy may have no effect \ref{bib:nvidia}.
 
   \section{Conclusion} %repeat idea, summarize key results
   \label{sec:conclusion}
   We have described our techniques for optimizing the code we received from the presentation given by Dr. Wolfe.
   We have also shown our methods for collecting data about the performance of the code that was received and our own extension of that code.
-  We have found that to optimize code that is not hardware specific is very difficult.
-  In some areas our implementation does perform better but in others it does not.
-  The results that were obtained does suggest that it would be possible to increase the speed of the calculations farther, although we were not able to implement them further at this time.
+  It was discovered found that optimization of code that is not hardware specific is very difficult.
+  In some areas our implementation does perform better than the bug-fixed version of Dr. Wolfe's code, but in others it does not.
+  The results that were obtained do suggest that it would be possible to increase the speed of the calculations further, although we were not able to implement them at this time.
 
   \section{Future Work} %list the things you wanted to do but couldn't finish in time for this paper
   \label{sec:future_work}
   There are several areas for future work that are recognized at this time.
-  Additional work on implementing the Jacobi Method with one kernel call.
+  Additional work needs to be done on implementing the Jacobi Method with one kernel call.
   We believe that better performance can still be achieved using the current method with further effort put into optimization.
-  Another area of work would be to implement a way for the user to manually enter the number of threads to be used.
-  This would allow for the rapid testing of different number of threads to view the most efficient.
   We would have also like to have added functionality to initialize the array on the GPU.
-  Thus, allowing it to be done in parallel, and therefore, done more quickly than the sequential version as it is now.
-  Lastly, creating a version that would customize itself to each individual GPU by getting information from the GPU about itself and using this data to adjust the function to better fit the GPU.
+  When this is done in parallel it is done more quickly than the sequential version.
+  Lastly, a version could be created that would customize itself to each individual GPU by getting specific information from the GPU and using that data to fine-tune the kernel.
 
   \section{Acknowledgements} %mention wolfe et al
   \label{sec:acknowledgements}
-  We would like to thank Dr. Wolfe for the examples that he provided for us.
-  This work was performed on equipment allocated to us from the CUDA lab.
+  We would like to thank Dr. Wolfe for the examples that he provided us.
+  This work was performed on equipment allocated to us from the Portland State University CUDA lab.
 
 \end{multicols}
 
 \begin{flushleft}
   \begin{thebibliography}{99}
-      \topmargin = -100pt
     \bibitem{bib:jacobi_wiki}``Relaxation (iterative Method).''
       Wikipedia, the Free Encyclopedia. Web. 01 Aug. 2011. $<$http://en.wikipedia.org/wiki/Relaxation\_(iterative\_method)$>$.
-    \bibitem{bib:wolfe}``Jacobi Relaxation''
+    \bibitem{bibwolfe}``Jacobi Relaxation''
       Dr. Michael Wolfe. The Portland Group, Inc. $<$http://www.pgroup.com/$>$
+    %\bibitem{bib:nvidia}``Nvidia CUDA User Guide''
+    %\bibitem{bib:wiki page for XEON}
+    %\bibitem{papers in class}%at least the microbenchmarks one
   \end{thebibliography}
 \end{flushleft}
 
