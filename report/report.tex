@@ -1,133 +1,487 @@
-%LATEX Header
-\documentclass[11pt, twocolumn]{article}
+%LaTeX Header
+\documentclass[10pt]{article}
 \usepackage[letterpaper]{geometry}
 \geometry{top=1.0in, bottom=1.0in, left=1.0in, right=1.0in}
 \usepackage{times}
-\usepackage{amssymb,amsmath}
+%\usepackage{amssymb,amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}%added this
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{fontspec}
+
+\usepackage[hang,small,bf]{caption}
+
+\usepackage{multicol}
+\usepackage{minted}
+
+\setsansfont{Calibri}
+\setmonofont{Consolas}
+
+\usemintedstyle{solarized}
+
+\usepackage{booktabs}
+
+\renewcommand{\arraystretch}{1.2}
+
+\renewcommand\theFancyVerbLine{\small\arabic{FancyVerbLine}}
+
+\lstset{frame=single, basicstyle=\footnotesize, breaklines=true, numbers=left}
 
 % Title Page
 \title{CUDA Implementation of Jacobi Relaxation}
 \author{Neeraja Budamagunta, Torben Rasmussen, Sweta Sharma, John Wehland, Matthew Wolfe}
-\date{7/20/2011}
+\date{\today}
+
+\makeatletter
+\newenvironment{tablehere}
+{\def\@capttype{table}}
+{}
+
+\newenvironment{figurehere}
+{\def\@captype{figure}}
+{}
+\makeatother
 
 \begin{document}
+\renewcommand{\theFancyVerbLine}{
+\sffamily\textcolor[rgb]{0.5,0.5,0.5}{\scriptsize\arabic{FancyVerbLine}}}
+
 \maketitle
 
-\section{Introduction} %background/context, the idea, summary of results
-How will the world be different if we succeed?
-Give away the punchline\cite{keyname1}.
-There is little argument that parallel programming is the final frontier of supercomputing.
-Processors have reached their thermal density limit, and are soon going to be as small as they can be (barring atomic computers).
+\tableofcontents
+\clearpage
 
-"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
+\begin{multicols}{2}
+  \begin{abstract}
+    CUDA is a extension on C++ that allows for massively parallel programming (MPP).
+    In this paper we describe how we optimized a program written by Micheal Wolfe that uses a Jacobi Relaxation technique.
+    We debugged/cleaned his implementation to allow it to work correctly, then converted it to use only one GPU kernel, going further to allow the user specify what size matrix to use and how many threads to use.
+    We then add functionality that allows us to collect performance data.
+    Also, we use the profiler to give us performance data as well.
+    We tabulate that data that was collected and present this to the reader.
+    Finally, we propose areas of future work.
+  \end{abstract}
 
-Implement Jacobi Relaxation in CUDA.
-(Note: as a starting point, several versions are included in Dr. Wolfe's slides).
-Do all of the calculation on the device side, in the same manner as the examples covered in lecture.
-Conduct a performance tuning study to get the best possible performance.
-Use available tools such as CUDA profiler, and direct measurement to gather performance data for your application.
-Write a report summarizing your results, including graphs and figures as needed.
+  \section{Introduction} %background/context, the idea, summary of results
+  The graphics processing unit (GPU) is an application-specific device aimed at rapidly building images for viewing on a display.
+  Over the past decade, GPUs have become more and more general purpose, and can now be called general purpose GPUs (GP-GPUs).
+  Software frameworks such as CUDA and OpenCL have allowed researchers to tap into the parallelism that exists in these devices.
+  These frameworks allow the creation of parallel mathematical applications that can be deployed on low-cost, readily available hardware.
+  CUDA, or Compute Unified Device Architecture, is Nvidia's parallel computing architecture.
+  This architecture gives a programmer access to the underlying hardware through a few layers of abstraction, allowing for relatively high-level programming.
+  A GPU can offer a very high computational rate if the algorithm is well-suited for the device.
+  One such application is matrix computation.
+  Matrix applications like the Jacobi relaxation work well in parallel.
+  As such, it is well suited to work with on GP-GPU’s.
 
-\subsection{math} 
-\begin{equation}
-A=\begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1n} \\ a_{21} & a_{22} & \cdots & a_{2n} \\ \vdots & \vdots & \ddots & \vdots \\a_{n1} & a_{n2} & \cdots & a_{nn} \end{bmatrix}, 
-\end{equation}
+  The rest of this report is organized in the following way.
+  The next section talks about our project idea, design and analysis of solution to our problem.
+  Section 3 shows the actual implementations followed by the results achieved.
+  In section 4 we discuss work related to ours and finally conclude in section 5.
+  We had limited goals due to shortage of time and resources, so we discuss future work in section 6.
 
-\begin{equation}
-\qquad  \mathbf{x} = \begin{bmatrix} x_{1} \\ x_2 \\ \vdots \\ x_n \end{bmatrix},
-\qquad  \mathbf{b} = \begin{bmatrix} b_{1} \\ b_2 \\ \vdots \\ b_n \end{bmatrix}.
-\end{equation}
+  \section{System Specifications}
+  \subsection{GPU Specifications}
+  The GPU we used to run and benchmark our implementations is an Nvidia Tesla C1060.
+  See table~\ref{tb:tesla} for more detail.
 
-\section{Design}
-What could be done.
-"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
+  \begin{table*}[!ht]\centering
+    \begin{tabular}{@{}l l@{}}\toprule
+      \bf{Spec}                       &   \bf{Value}          \\
+      \hline
+      Compute Capability              &   1.3                 \\
+      Dedicated global memory         &   4294770688 (4GiB)   \\
+      Total Constant Memory           &   65536 (64kiB)       \\
+      Scalar Processors per GPU       &   240                 \\
+      Streaming Multiprocessor Count  &   30                  \\
+      Shared memory per MP            &   16384 (16kiB)       \\
+      Registers per MP                &   16384 (16kiB)       \\
+      Threads per warp                &   32                  \\
+      Max threads per block           &   512                 \\
+      Max thread dimensions           &   (512 512 64)        \\
+      Max Grid dimensions             &   (65535 65535 1)     \\
+      \hline
+    \end{tabular}
+    \caption{Nvidia Tesla C1060 Specifications}
+    \label{tb:tesla}
+  \end{table*}
 
-\section{Implementation}
-What was actually done.
-Our implementation of a parallel Jacobi Relaxation was implemented using CUDA 4.0 on a workstation with ,SPECS,
-"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
+  \subsection{CPU Specifications}
+  The computer used for this project ``Meakin'', contains an Intel Xeon Processor. More detailed specifications are found in table~\ref{tb:cpu}.
+  \begin{table*}[!ht]\centering
+    \begin{tabular}{@{}l l@{}}\toprule
+      \bf{Spec}                     &   \bf{Value}                      \\
+      \hline
+      Processor                     &   Intel Xeon E5504 ``Gainestown'' \\
+      Number of Cores (threads)     &   4 (8)                           \\
+      CPU Clock Rate                &   2.0 GHz                         \\
+      L3 Cache                      &   4 MB                            \\
+      Memory Interface              &   3x DDR3-800                     \\
+      System Memory                 &   12290000 kB $\approx$ 12 GB     \\
+      \hline
+    \end{tabular}
+    \caption{Meakin CPU specifications}
+    \label{tb:cpu}
+  \end{table*}
 
-The device we ran the code on was profiled as follows:
+  \section{Design}
+  \subsection{The Jacobi Relaxation}
+  The Jacobi Relaxation is a commonly used iterative method for solving systems of equations.
+  It uses the main, upper, and lower diagonals of the matrix.
+  Able to parallelize the computations on individual elements of the matrix to a large extent.
+  This makes it very worthwhile to implement on CUDA architecture.
+
+  The general form for a system of linear equations is (in matrix form):
+  \[A*u=f\]
+  Our particular implementation of the relaxation uses a weight \(w\) to help it converge more quickly:
+  \[x^{(i)} = x^{(i-1)} * (1-w)+w*(D^{-1}(f-(L+U))*x^{(i-1)}\]
+  The remaining parameters will now be discussed in more detail.
+  \(A\) and \(f\) are the known equation coefficients and constant solutions.
+  \(u\) is the unknown solution matrix.
+  \(x^{(0)}\) is an initial guess for the matrix u.
+  \(x^{(i)}\) is the \(i^{th}\) iteration of the Jacobi relaxation.
+  The algorithm is said to be done when the solution converges, or when the solution is within a predetermined error boundary.
+  Each previous value of \(x^{(i)}\) is used in the next iteration of the algorithm.
+  \(D\) is composed of a matrix of the same size as \(A\), with zeros in all places besides the main diagonal:
+  \[
+  D =
+  \begin{bmatrix*}
+    A_{1,1}     & 0         & 0 \\
+    0           & \ddots    & 0 \\
+    0           & 0         & A_{i,i}
+  \end{bmatrix*}
+  \]
+  \(D^{-1}\) is simply the matrix where each element of \(D\) is inverted:
+  \[
+  D^{-1} =
+  \begin{bmatrix*}
+    \frac{1}{A_{1,1}}   & 0         & 0 \\
+    0                   & \ddots    & 0 \\
+    0                   & 0         & \frac{1}{A_{i,i}}
+  \end{bmatrix*}
+  \]
+  The lower and upper diagonal are the diagonals that run parallel to the main diagonal:
+  \[
+  A=
+  \begin{bmatrix*}
+    D & U & x \\
+    L & D & U \\
+    x & L & D
+  \end{bmatrix*}
+  \]
+  \[
+  L=
+  \begin{bmatrix*}
+    0 & 0               & 0 \\
+    A_{0,1} & 0         & 0 \\
+    0       & A_{1,2}   & 0
+  \end{bmatrix*}
+  ,
+  U=
+  \begin{bmatrix*}
+    0 & A_{1,0} & 0       \\
+    0 & 0       & A_{2,1} \\
+    0 & 0       & 0
+  \end{bmatrix*}
+  \]
+
+  \subsection{Project Goals}
+  The main aim of our project was to implement an optimized version of Jacobi relaxation in CUDA.
+  We had Dr. Wolfe’s code [reference] as a starting point.
+  After analyzing Dr. Wolfe’s code and having a good understanding of weighted Jacobi algorithm we moved to our next step, optimization.
+  Dr. Wolfe himself has used many optimizations in his code and the code was tuned for array sizes multiples of sixteen plus two.
+  The reason for it being that best performance was achieved for block sizes of 16X16. 
+
+  In our analysis we found two things which we thought to modify.
+  Firstly, Dr. Wolfe’s code had a bug and array sizes bigger than 258 were not converging.
+  Hence we spent a lot of time fixing the bug.
+  Hence we used last two versions of his code and created two subversions of code called original\_jacobi5.cu and original\_jacobi6.cu which were bug free versions with added ability for runtime performance data measurements.
+  Secondly, we found that the code is highly tuned for a particular array size and only works with a bloxk size of 16x16.
+  We wanted to change that to take user specified block size and tried to generalize the program still trying to tune it as much as possible.
+  Thus we wanted to create another code sub version which we called as original\_jacobi6Mod.cu.
+  All of these sub versions fall into the main version which we call as version 1, which is a two kernel version.
+
+  We also planned to implement another version called one kernel version.
+  This again had the same sub versions, only difference being that these use only one kernel call instead of two.
+  The sub versions are called 1k\_jacobi5.cu, 1k\_jacobi6.cu and 1k\_jacobi6Mod.cu similar to the ones above.
+  We discuss our implementation of one kernel version and the modified code with user defined block sizes in the next section.
+  Also we discuss how do all of these six sub versions compare.
+
+  \section{Implementation}
+  \subsection{Results} %prove the idea is good
+  In the design section above we have talked about the algorithm and design of our problem.
+  In this section we show the actual implementation and the results we got using these optimizations.
+  We actually worked on two levels of optimizations on [reference], one of those is the one kernel optimizations and the other one is maximizing the throughput according to the array size, using user entered block size values.
+
+  \subsubsection{One Kernel Optimization}
+  Our first optimization is to implement Jacobi relaxation in CUDA with one kernel.
+  In [reference] Michael has implemented Jacobi relaxation in CUDA using two kernel calls per iteration.
+  Instead as an optimization we use a single kernel call per iteration reducing the over head to initiate an extra kernel each time.
+  The reason for using the second kernel was to reduce the change values across the blocks to one single value.
+  In the first kernel ``jacobikernel'' the change values were reduced from one change value per thread to a change value per block.
+  In the second kernel with fewer numbers of threads and one single block those values are reduced to one single change value.
+  In our implementation we used the existing threads to do the additional work of further reducing the per block change values to a single value.
+
+  With this optimization we were able to reduce the calculation time to a max of 10\% for smaller array sizes.
+  However as the array sizes grew more and more threads were sitting idle and there was less work to do.
+  In other words there were lesser change values to reduce than the number of threads just waiting for a few threads to work with these values.
+  Hence as expected the over head of these waiting threads surmounted the optimization of reducing the overhead of kernel initialization.
+  However this is a possible way of optimization which did give us positive results for smaller array sizes and still has a scope for improvement.
+  
+  \subsubsection{Implementation with varying block sizes}
+  In the version of Dr Wolfe's code which used the shared memory and array allocation in local memory, the versions that we implemented ourselves, specific shared memory is allocated in each block to accommodate the “change” value obtained over the relaxation.
+  Since it is impossible to dynamically allocate memory on the device, we had to allocate enough memory to accommodate the largest number of threads that we would be using.
+  Since the threads were allocated in a 2 dimensional square and the maximum number of threads was 512, we allocated enough memory for a 22 by 22 square block.
+
+  Here are some results captured for varying block sizes:
+
+  %Original J6 Mod  Graph 
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/b1.pdf}
+    \caption{}
+    \label{fig:2kmod_time}
+  \end{figurehere}
+
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/c1.pdf}
+    \caption{}
+    \label{fig:1kmod_time}
+  \end{figurehere}
+
+  As we see in figures \ref{fig:2kmod_time} and \ref{fig:1kmod_time}, a block size of 10x10 took the most time to converge.
+  Also, block sizes of 14x14 and 20x20 performed a little lower than the block size of 16x16.
+  However, from the above implementation, we could see that the block size of 16x16 worked the best.
+  This is mostly because, while GPUs are exceptional at performing many small calculations very quickly, they do not excel at memory access.
+  This is a general rule however.
+  The goal is to maximize the fraction of SM resources that are being used at any given time.
+  One guideline is that as the complexity of the kernel increases the thread count should decrease, but this is not always beneficial.
+
+  As can be seen from the data collected performance is generally increased across all benchmarks as the thread count goes up.
+  This increase has a limit, however.
+  Once the threads begin to exceed 16x16 we begin to see a decrease in performance.
+  This is because, we use tiling to achieve maximum performance out of the program, which almost always performs best when 256 (16 x 16) threads are used.
+  This is because in devices of compute capability 1.x global memory is accessed in chunks of half a warp or 16 threads.
+  By using a number of threads that is a multiple of 16 you can maximize the amount of memory read per memory fetch.
+  Since a block requires a square matrix in order to perform the jacobi relaxation algorithm, a 16x16 sized block will the best of its performance.
+
+  \subsection{Performance Statistics}
+  Performance optimization revolves around the following strategies: 
+  \begin{itemize}
+    \item Maximize parallel execution to achieve maximum utilization
+    \item Optimize memory usage to achieve maximum memory throughput 
+    \item Optimize instruction usage to achieve maximum instruction throughput 
+  \end{itemize}
+
+  The strategies that yield the best performance gain for a particular portion of an application depends on the performance limiters for that portion.
+  Optimizing instruction usage of a kernel that is mostly limited by memory accesses will not yield any significant performance gain. 
+
+  Although we were not able to optimize our implementation to a great extent focusing on the above factors, we thought we would project the above factors that our implementation was yielding.
+
+  We measured the time taken by the GPU kernel and the overall time taken by the program.
+  Also, we did measure factors like GFLOPS, throughput, speed up etc., that would project the performance. 
+
+  \subsubsection{Timing}
+
+  We measured the time taken by the GPU using Direct Measurement and the Cuda Profiler.
+  In Direct measurement, we have measured the time elapsed through direct measurement using two methods: gettimeofday and Cuda Events.
+
+  \paragraph{gettimeofday()}
+  This function obtains the current time, expressed as seconds and microseconds since the Epoch, and store it in the timeval structure pointed to by tv.
+  Here is the sample code that we used:
+
+  \begin{minted}[fontsize=\footnotesize]{c}
+    gettimeofday(&tt1, NULL);
+    JacobiGPU(a, n, m, .2, .1, .1, .1);
+    gettimeofday(&tt2, NULL);
+    ms = (tt2.tv_sec - tt1.tv_sec);
+    ms = ms * 1000000 + (tt2.tv_usec \
+    - tt1.tv_usec);
+    fms = (float)ms / 1000000.0f;
+    printf( "time(gpu ) \
+    = %f seconds\n", fms );
+  \end{minted}
+
+  \paragraph{CUDA Events}
+  This API provides calls that create and destroy events, record events (via timestamp), and convert timestamp differences into a floating-point value in milliseconds.
+  We have used the cudaEventRecord and the cudaEventElapsedTime to  measure the time taken by the GPU.
+  The cudaEventRecord records an event and the cudaEventElapsedTime  computes the elapsed time between two events (in milliseconds with a resolution of around 0.5 microseconds).
+  Here is the sample code that we used before and after the kernel call. 
+
+  \begin{minted}[fontsize=\footnotesize]{c}
+    cudaEventRecord(e2);
+    cudaMemcpy(&change, lchange, \
+    sizeof(float), cudaMemcpyDeviceToHost);
+    cudaEventElapsedTime(&msec, e1, e2);
+    sumtime += msec;
+  \end{minted}
+
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/a1.pdf}
+    \caption{}
+    \label{fig:all_time}
+  \end{figurehere}
+
+  As you see in figure \ref{fig:all_time}, the J5 versions took the longest time and the J6 versions which used the shared memory and the local thread memory for allocating the matrix and calculating the change took lesser time.
 
 
-\begin{tabular}{ l r }
-&---- General Information for Device 0 ---                  \\
-Name:                      &   Tesla C1060                  \\
-Compute Capability:        &   1.3                          \\
-nClock Rate:               &   1296000                      \\
-Device Copy Overlap:       &   Enabled                      \\
-Kernel Execution Timeout:  &   Disabled                     \\
+  \subsubsection{Shared Memory Allocation}%john
+  In the most advanced version of Michael Wolfe's code and in the versions that we ended up implementing ourselves, specific shared memory is allocated in each block to accommodate the calculations of each thread.
+  Since it is impossible to dynamically allocate memory on the device, we had to allocate enough memory to accommodate the largest number of threads that we would be using.
+  Since the threads were allocated in a 2 dimensional square and the maximum number of threads was 512, we had to allocate enough memory for a 22 by 22 square block.
+  This memory was allocated into the shared memory of each block irrespective of how much of that memory was actually used.
+  It was only necessary to make this change for program versions that allowed for different numbers of threads per block of course.
 
----- Memory Information for Device 0 ---                    \\
-Total Global Memory:       &   4294770688                   \\
-Total Constant Memory:     &   65536                        \\
-Max mem pitch:             &   2147483647                   \\
-Texture Alignment:         &   256                          \\
+  As you can see from the occupancy graph this had the effect of increasing the occupancy of the programs allowing for multiple threads.
+  However these programs achieved consistently lower GFLOPS as well as higher GPU calculation times.
+  This illustrates the fact that an increase in occupancy does not automatically lead to an increase in performance.
+  In our case it is affirming out that the bottleneck in our program is not in memory.
+  At any given time there is probably a thread that has already fetched its required memory and is ready to run on the SM.
 
---- MP Information for Device 0 ---                         \\
-Multiprocessor Count:      &   30                           \\
-Shared mem per mp:         &   16384                        \\
-Registers per mp :         &   16384                        \\
-Threads in warp:           &   32                           \\
-Max threads per block:     &   512                          \\
-Max thread dimensions:     &   (512 512 64)                 \\
-Max Grid Dimensions:       &   (65535 65535 1)              \\
+  \subsubsection{GFLOPS}
+  This is one of the measures of a computers performance and are nothing but Floating point operations and a flop count is a count of these operations.
+  The FLOPS were calculated two different ways. 
+  \begin{enumerate}
+    \item Counting the number of operations manually by a code walk through
+    \item Counting using the PTX file
+  \end{enumerate}
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/a2.pdf}
+    \caption{}
+    \label{fig:gflops1}
+  \end{figurehere}
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/b2.pdf}
+    \caption{}
+    \label{fig:gflops2}
+  \end{figurehere}
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/c2.pdf}
+    \caption{}
+    \label{fig:gflops3}
+  \end{figurehere}
+  \subsubsection{Throughput}
+  We captured the Instruction throughput and the Global Memory overall throughput given by the Profiler.
 
----- General Information for Device 1 ---                   \\
-Name:                      &   Quadro NVS 295               \\
-Compute Capability:        &   1.1                          \\
-Clock Rate:                &   1300000                      \\
-Device Copy Overlap:       &   Disabled                     \\
-Kernel Execution Timeout : &   Disabled                     \\
+  \paragraph{Instruction Throughput}
+  Instruction throughput is the ratio of achieved instruction rate Vs Peak Single-Issue Instruction Rate.
 
----- Memory Information for Device 1 ---                    \\
-Total Global Memory:       &   267714560                    \\
-Total Constant Memory:     &   65536                        \\
-Max mem pitch:             &   2147483647                   \\
-Texture Alignment:         &   256                          \\
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/g1.pdf}
+    \caption{}
+    \label{fig:jacobi_instr_throughput}
+  \end{figurehere}
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/g2.pdf}
+    \caption{}
+    \label{fig:reduction_instr_throughput}
+  \end{figurehere}
+  As we see from figure \ref{fig:jacobi_instr_throughput}, the one kernel version gives a better instruction throughput for smaller matrix sizes and is dominated by the two kernel version as the matrix size increases.
+  Also, the throughput for the reduction kernel has a significant fall which is because, there are more and more number of threads staying idle. 
 
---- MP Information for Device 1 ---                         \\
-Multiprocessor Count:      &   1                            \\
-Shared mem per mp:         &   16384                        \\
-Registers per mp :         &   8192                         \\
-Threads in warp:           &   32                           \\
-Max threads per block:     &   512                          \\
-Max thread dimensions:     &   (512 512 64)                 \\
-Max Grid Dimensions:       &   (65535 65535 1)              \\
+  \paragraph{Global Memory Throughput}
+  Global Memory Over All throughput is the sum of read and write throughput.
+  Minimizing data transfers between global memory and the device by maximizing use of shared memory and caches is one key that we want to look at while optimizing this factor.
 
-\end{tabular}
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/g3.pdf}
+    \caption{}
+    \label{fig:jacobi_mem_throughput}
+  \end{figurehere}
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/g4.pdf}
+    \caption{}
+    \label{fig:reduction_mem_throughput}
+  \end{figurehere}
+  As we see from the above figure, the global memory throughput is high for the J5 version which uses the device’s global memory and the J6 version which makes use of the shared memory and the local thread memory for the array initialization and relaxation has a significant decrease in the global memory throughput.
+  \subsubsection{Occupancy}
+  Occupancy is the ratio of active warps to the maximum number of warps supported on a multiprocessor of the GPU.
+  Each multiprocessor on the device has a set of N registers available for use by CUDA program threads.
+  These registers are a  shared resource that are allocated among the thread blocks executing on a multiprocessor.
+  The CUDA compiler attempts to minimize register usage to maximize the number of thread blocks that can be active in the machine simultaneously.
+  Maximizing the occupancy can help to cover latency during global memory loads that are followed by a \_\_syncthreads(). 
 
-\section{Results} %prove the idea is good
-we found that changing the block dimensions to ----- did -----.
-"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/o1.pdf}
+    \caption{}
+    \label{fig:1k_occupancy}
+  \end{figurehere}
 
-\section{Related Work} %prove the idea is new
-Not required to be fully implemented for this project.
-Who else has done research in this field?
-"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
+  \begin{figurehere}
+    \centering
+    \includegraphics[width=8cm]{graphs/o2.pdf}
+    \caption{}
+    \label{fig:2k_occupancy}
+  \end{figurehere}
 
-\section{Conclusion} %repeat idea, summarize key results
-Our goal was to implement an efficient, optimized Jacobi Relaxation using CUDA 4.0 and NVidia GPU hardware.
-"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
+  As we see from figures \ref{fig:1k_occupancy} and \ref{fig:2k_occupancy}, the occupancy is 100\% for a block size of 16.
+  Also, higher occupancy does not necessarily mean higher performance.
+  If a kernel is not bandwidth bound, then increasing occupancy will not necessarily increase performance.
+  If a kernel invocation is already running at least one thread block per multiprocessor in the GPU, and it is bottlenecked by computation and not by global memory accesses, then increasing occupancy may have no effect. 
 
-\section{Future Work} %list the things you wanted to do but couldn't finish in time for this paper
-There are many different ways of optimizing parallel code, and our method only touched a single one of those.
-In the future we will have the opportunity to implement ------- in order to more fully explore the platform's potential.
-"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolora magna aliqua.  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  Duis aute irure dolor in reprehenderit in voluplate velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia desrunt mollit anim id est laborum."
+  \section{Conclusion} %repeat idea, summarize key results
+  We have described our techniques for optimizing the code we received from the presentation given by Michael Wolfe.
+  We have also shown our methods for collecting data about the performance of the code that was received and our own extension of that code.
+  We have found that to optimize code that is not hardware specific is very difficult.
+  In some areas our implementation does perform better but in others it does not.
+  The results that were obtained does suggest that it would be possible to increase the speed of the calculations farther, although we were not able to implement them further at this time.
+
+  \section{Future Work} %list the things you wanted to do but couldn't finish in time for this paper
+  There are several areas for future work that are recognized at this time.
+  Additional work on implementing the Jacobi Method with one kernel call.
+  We believe that better performance can still be achieved using the current method with further effort put into optimization.
+  Another area of work would be to implement a way for the user to manually enter the number of threads to be used.
+  This would allow for the rapid testing of different number of threads to view the most efficient.
+  We would have also like to have added functionality to initialize the array on the GPU.
+  Thus, allowing it to be done in parallel, and therefore, done more quickly than the sequential version as it is now.
+  Lastly, creating a version that would customize itself to each individual GPU by getting information from the GPU about itself and using this data to adjust the function to better fit the GPU.
+
+  \section{Acknowledgements} %mention wolfe et al
+  We would like to thank Michael Wolfe for the examples that he provided for us.
+  This work was performed on equipment allocated to us from the CUDA lab.
+
+\end{multicols}
 
 \begin{flushleft}
-\begin{thebibliography}{99}
-\topmargin = -100pt
-    \bibitem{keyname1}``Relaxation (iterative Method).''
-        Wikipedia, the Free Encyclopedia. Web. 01 Aug. 2011. $<$http://en.wikipedia.org/wiki/Relaxation\_(iterative\_method)$>$.
-    \bibitem{keyname2}``name''
-        citation
-    \bibitem{keyname3}``name''
-        citation
-    \bibitem{keyname4}``name''
-        citation
-    \bibitem{keyname5}``name''
-        citation
-\end{thebibliography}
+  \begin{thebibliography}{99}
+      \topmargin = -100pt
+    \bibitem{wiki}``Relaxation (iterative Method).''
+      Wikipedia, the Free Encyclopedia. Web. 01 Aug. 2011. $<$http://en.wikipedia.org/wiki/Relaxation\_(iterative\_method)$>$.
+    \bibitem{michael}``Jacobi Relaxation''
+      Michael Wolfe. The Portland Group, Inc. $<$http://www.pgroup.com/$>$
+  \end{thebibliography}
 \end{flushleft}
+
+\clearpage
+
+\appendix
+\section{Code}
+
+\subsection{Sequential Code}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/seq_jacobi.c}
+
+\subsection{Michael Wolfe's Code}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi5.cu}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/original_jacobi6.cu}
+
+\subsection{One Kernel Implementation}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_jacobi5.cu}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_jacobi6.cu}
+
+\subsection{Adjustable Thread Count Implementation}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/orig_J6M_v2.cu}
+\inputminted[linenos, fontsize=\footnotesize]{c}{../jacobi_final/1k_J6M_v2.cu}
+
 \end{document}
